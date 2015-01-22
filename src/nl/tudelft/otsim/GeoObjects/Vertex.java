@@ -2,9 +2,11 @@ package nl.tudelft.otsim.GeoObjects;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Locale;
 
 import com.vividsolutions.jts.geom.Coordinate;
+
 import nl.tudelft.otsim.FileIO.ParsedNode;
 import nl.tudelft.otsim.FileIO.StaXWriter;
 import nl.tudelft.otsim.GUI.GraphicsPanel;
@@ -59,10 +61,22 @@ public class Vertex {
 		if ((length < 7) || (! text.substring(0, 1).equals("(")) || (! text.substring(length - 1).equals(")")))
 			throw new Error ("Bad format (" + text + ")");
 		String[] fields = text.substring(1, text.length() - 1).split(",");
-		if (fields.length != 3)
+		if (fields[0].endsWith("m")) {
+			for (int i = 0; i<fields.length; i++)
+				fields[i] = fields[i].substring(0, fields[i].length()-1);
+		}
+			
+		if (fields.length == 2)
+			setValues(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]), 0.0);
+		else if (fields.length == 3)
+			setValues(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]), Double.parseDouble(fields[2]));
+		else
+			throw new Error ("Bad format (" + text + ")");
+		
+		/*if (fields.length != 3 && fields.length != 2)
 			throw new Error ("Bad format (" + text + ")");
 		setValues(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]), Double.parseDouble(fields[2]));
-	}
+*/	}
 	
 	/**
 	 * Duplicate a Vertex
@@ -319,4 +333,82 @@ public class Vertex {
 			dz = 0;
 		return (Math.sqrt(dx * dx + dy * dy + dz * dz));
 	}
+	public double squaredDistance(Vertex other) {
+		double dx = other.x - x;
+		double dy = other.y - y;
+		double dz = other.z - z;
+		if (Double.isNaN(dz))
+			dz = 0;
+		return (dx * dx + dy * dy + dz * dz);
+	}
+	public static Vertex minus(Vertex a, Vertex b) {
+		double dx = a.x- b.x;
+		double dy = a.y - b.y;
+		double dz = a.z - b.z;
+		if (Double.isNaN(dz))
+			dz = 0;
+		return new Vertex(dx,dy,dz);
+	}
+	public static Vertex plus(Vertex a, Vertex b) {
+		double dx = a.x + b.x;
+		double dy = a.y + b.y;
+		double dz = a.z + b.z;
+		if (Double.isNaN(dz))
+			dz = 0;
+		return new Vertex(dx,dy,dz);
+	}
+	public double dotProduct(Vertex other) {
+		if (Double.isNaN(z) || Double.isNaN(other.z)) {
+			return x*other.x + y*other.y;
+		} else {
+			return x*other.x + y*other.y + z*other.z;
+		}
+	}
+	public static Vertex scalarMultiplication(double t, Vertex a) {
+		double dx = t*a.x;
+		double dy = t*a.y;
+		double dz = t*a.z;
+		if (Double.isNaN(dz))
+			dz = 0;
+		return new Vertex(dx,dy,dz);
+	}
+	public static double calcLength(ArrayList<Vertex> vertices) {
+		double length = 0;
+		if (vertices.size()>1) {
+		for (int i = 0; i< vertices.size()-1; i++) {
+			length += vertices.get(i).distance(vertices.get(i+1));
+			
+		}
+		}
+		return length;
+	}
+	public static double[] calcPointAtDistance(double p, ArrayList<Vertex> vertices) {
+		double length = Vertex.calcLength(vertices);
+		if (p>length)
+			throw new Error("p is larger than distance l");
+		
+		int i = 0;
+		
+		double arc = 0;
+		double cumlength = 0;
+		//System.out.println(p);
+		while (cumlength <= p) {
+			//System.out.println(cumlength);
+			arc = vertices.get(i).distance(vertices.get(i+1));
+			//System.out.println(arc);
+			cumlength += arc;
+			i++;
+		}
+		double ratio = (p-(cumlength-arc))/arc;
+		//System.out.println("ratio:");
+		//System.out.println(ratio);
+		double result[] = new double[3];
+		result[0] = ratio * (vertices.get(i).getX() - vertices.get(i-1).getX()) + vertices.get(i-1).getX();
+		result[1] = ratio * (vertices.get(i).getY() - vertices.get(i-1).getY()) + vertices.get(i-1).getY();		
+		result[2] = i;
+		return result;
+		
+	}
+	
+	
 }

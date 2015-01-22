@@ -161,6 +161,11 @@ public class TimeScaleFunction implements XML_IO {
 			factors.set(index, factors.get(index) * factor);
 	}
 	
+	public void  shiftTime(TimeScaleFunction pattern, double timeOffset) {
+		for (int index = 0; index < times.size(); index++) 
+			times.set(index, times.get(index)+timeOffset);
+	}
+	
 	/**
 	 * Set the Storable that will be notified on changes to this TimeScaleFunction.
 	 * @param newStorable Storable (may be null)

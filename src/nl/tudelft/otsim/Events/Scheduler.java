@@ -546,4 +546,8 @@ public class Scheduler implements ActionListener {
 	public void setSchedulerController(SchedulerController newSchedulerController) {
 		schedulerController = newSchedulerController;		
 	}
+	
+	public String getConfiguration() {
+		return this.configuration;
+	}
 }

@@ -24,6 +24,9 @@ public class NodeInteriorTampere extends NodeInterior {
 		double[] qCapIn = new double[nrIn];
 		for(int j=0; j<nrOut ;j++) {
 			supply[j] = cellsOut.get(j).Supply;
+			if (supply[j] < 0) {
+				throw new Error("negatief");
+			}
 		}
 		for(int i=0;i<nrIn;i++) {
 			demand[i] = cellsIn.get(i).Demand;
@@ -85,15 +88,19 @@ public class NodeInteriorTampere extends NodeInterior {
 		for(int i=0;i<nrIn;i++) {
 			demand[i] = cellsIn.get(i).Demand;
 			qCapIn[i] = cellsIn.get(i).qCap;
+			cellsIn.get(i).calcDemand();
+			double demand1 = cellsIn.get(i).Demand;
+			System.out.println(demand1);
 		}
+		
 		int indexCellsOut = cellsOut.indexOf(cell);
 		int indexCellsIn = cellsIn.indexOf(cell);
 		if (indexCellsOut!=-1) {
-			supply[indexCellsOut] = cellsOut.get(indexCellsOut).calcSupplyValue(new double[]{cell.KCell+addedParam[0], cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3]});
+			supply[indexCellsOut] = cellsOut.get(indexCellsOut).calcSupplyValue(new double[]{cell.KCell+addedParam[0], cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3], cell.vCri+addedParam[4]});
 		}
 		if (indexCellsIn!=-1) {
-			demand[indexCellsIn] = cellsIn.get(indexCellsIn).calcDemandValue(new double[]{cell.KCell+addedParam[0],cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3]});
-			qCapIn[indexCellsIn] = cellsIn.get(indexCellsIn).fd.calcQCap(new double[]{cell.KCell+addedParam[0],cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3]});	
+			demand[indexCellsIn] = cellsIn.get(indexCellsIn).calcDemandValue(new double[]{cell.KCell+addedParam[0],cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3], cell.vCri+addedParam[4]});
+			qCapIn[indexCellsIn] = cellsIn.get(indexCellsIn).fd.calcQCap(new double[]{cell.KCell+addedParam[0],cell.vLim + addedParam[1], cell.kCri + addedParam[2], cell.kJam+addedParam[3], cell.vCri+addedParam[4]});	
 		}
 		ArrayList<Double[]> result = calcFluxValues(supply, demand, qCapIn);
 		double res = -1;
@@ -337,7 +344,7 @@ public class NodeInteriorTampere extends NodeInterior {
 				
 			}
 			calcfluxesIn[i] = tmpj;
-			if (calcfluxesIn[i] > 20000) 
+			if (calcfluxesIn[i] > 20000 || calcfluxesIn[i]<0) 
 				throw new Error("high flux: " + calcfluxesIn[i]);
 			
 			
@@ -351,6 +358,8 @@ public class NodeInteriorTampere extends NodeInterior {
 				
 			}
 			calcfluxesOut[j] = tmpi;
+			if (calcfluxesOut[j] > 20000 || calcfluxesOut[j]<0) 
+				throw new Error("high flux: " + calcfluxesIn[j]);
 		}
 		
 		ArrayList<Double[]> result = new ArrayList<Double[]>();

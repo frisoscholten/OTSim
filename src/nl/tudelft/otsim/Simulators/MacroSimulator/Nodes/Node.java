@@ -71,6 +71,21 @@ abstract public class Node {
 		}
 		setTurningRatio(arr1);
 	}
+	public void setTurningRatioCompact(double tf) {
+		if (nrIn == 1 && nrOut ==2) {
+			this.setTurningRatio(new double[][]{{tf, 1-tf}});
+		} else {
+			throw new Error("Turningfractions not yet implemented");
+		}
+	}
+	public double getTurningRatioCompact() {
+		if (nrIn == 1 && nrOut ==2) {
+			return this.turningRatio[0][0];
+		} else {
+			throw new Error("Turningfractions not yet implemented");
+		}
+	}
+	
 	public void setTurningRatio(double[][] array) {
 		double[] totali = new double[nrIn];
 		for (int i = 0; i <nrIn; i++) {

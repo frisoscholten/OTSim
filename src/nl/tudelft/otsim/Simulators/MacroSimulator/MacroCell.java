@@ -9,16 +9,27 @@ import java.awt.Color;
 
 
 
+
+
+
 import nl.tudelft.otsim.Simulators.MacroSimulator.Model;
 import nl.tudelft.otsim.Simulators.MacroSimulator.FundamentalDiagrams.IFD;
 import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.Node;
+import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.NodeBoundaryIn;
+import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.NodeBoundaryOut;
 import nl.tudelft.otsim.GUI.GraphicsPanel;
+
+
+
 
 
 
 
 import java.util.ArrayList;
 import java.util.Random;
+
+
+
 
 
 
@@ -132,8 +143,16 @@ public class MacroCell {
     /** Legal critical density [veh/m]. */
     public double kCri = 0.018;
     
+    public double vCri = 80/3.6;
+    public double vCriBeforeInit = 80/3.6;
+    
     /** Legal jam density [veh/m]. */
     public double kJam = 0.125;
+    
+    public double kCriPerLane = 0.020;
+    
+    /** Legal jam density [veh/m]. */
+    public double kJamPerLane = 0.125;
     
     /** Legal flow capacity [veh/m/lane]. */
     public double qCap;
@@ -141,6 +160,9 @@ public class MacroCell {
     public double[] FluxIn2;
 	public double[] FluxOut2;
 	public int lanes;
+	public boolean detector = false;
+	public boolean selected = false;
+	public Link link;
 	
 	
     
@@ -174,14 +196,16 @@ public class MacroCell {
     }
     public void init() {
     	lanes = (int) (width/3.5);
-    	kCri = 0.020*lanes;
-    	kJam = 0.125*lanes;
+    	kCri = kCriPerLane*lanes;
+    	kJam = kJamPerLane*lanes;
+    	vCri = vCriBeforeInit;
     	qCap = fd.calcQCap(this);
     	KCell = 0;
     	QCell = calcQ(KCell);
     	VCell = calcV(KCell);
     	l = calcLength();
     	
+    		
     	
     	indexNodeIn = nodeIn.cellsOut.indexOf(this);
     	indexNodeOut = nodeOut.cellsIn.indexOf(this);
@@ -225,9 +249,12 @@ public class MacroCell {
 		double arc = 0;
 		double cumlength = 0;
 		//System.out.println(p);
-		while (cumlength <= p) {
+		while (cumlength <= p-0.0001) {
 			//System.out.println(cumlength);
+			if ((i+1) == vertices.size())
+				System.out.println("fout");
 			arc = vertices.get(i).distance(vertices.get(i+1));
+			
 			//System.out.println(arc);
 			cumlength += arc;
 			i++;
@@ -251,66 +278,7 @@ public class MacroCell {
 	public void addOut(Integer i) {
 		outs.add(i);
 	}
-	@SuppressWarnings("unchecked")
-	public ArrayList<MacroCell> splitInParts(int nrParts) {
-		ArrayList<MacroCell> result = new ArrayList<MacroCell>();
-		System.out.println("Joined link " + id + " is splitted into " + nrParts + " parts");
-		//System.out.println(nrParts);
-		if (nrParts == 1 || nrParts == 0) {
-			result.add(this);
-		} else {
-		
-			int vert = 0;
-			this.l = calcLength();
-		for (int i = 0; i< nrParts - 1; i++) {
-			
-			MacroCell m = new MacroCell(this.model);
-			
-			m.setWidth(this.width);
-			m.setVLim(this.vLim);
-			m.setId(new Random().nextInt());
-			m.setConfigNodeIn(this.configNodeIn);
-			m.setConfigNodeOut(this.configNodeOut);
-			
-			double res[] = this.calcPointAtDistance((i+1)*(this.l)/(nrParts));
-			//System.out.println(Arrays.toString(res));
-			//System.out.println("vert: " + Integer.toString(vert) + " res: " + Double.toString(res[2]));
-			m.vertices = new ArrayList<Vertex>(this.vertices.subList(vert, (int) res[2]));
-			vert = (int) res[2];
-			m.vertices.add(new Vertex(res[0],res[1],0));
-			this.vertices.add(vert, new Vertex(res[0],res[1],0));
-		
-			
-			result.add(m);
-		}
-		this.vertices = new ArrayList<Vertex>(this.vertices.subList(vert, this.vertices.size()));
 	
-		
-		result.get(0).ups = (ArrayList<MacroCell>) this.ups.clone();
-		for (MacroCell c: ups) {
-			c.downs.remove(this);
-			c.downs.add(result.get(0));
-		}
-		
-			
-		
-		for(int j=1; j < nrParts -1;j++) {
-			//result.get(j-1).downs.clear();
-			result.get(j-1).downs.add(result.get(j));
-			result.get(j).ups.add(result.get(j-1));
-		}
-		
-		
-		result.get(nrParts-2).downs.add(this);
-		this.ups.clear();
-		this.ups.add(result.get(nrParts-2));
-		
-		
-		result.add(this);
-		}
-		//System.out.println(result.toString());
-		return result;
-	}
 	public String toString() {
 		
 		
@@ -340,7 +308,7 @@ public class MacroCell {
     		return (kJam - k)/(kJam - kCri)*(kCri*vLim);*/
     }
     public double calcQ(double k) {
-    	return fd.calcQ(this, new double[]{k-this.KCell,0,0,0});
+    	return fd.calcQ(this, new double[]{k-this.KCell,0,0,0,0});
     	/*if (k<0 || k > kJam)
     		throw new Error ("density is not correct" + Double.toString(k));
     	else if (k<kCri) 
@@ -391,12 +359,13 @@ public class MacroCell {
 		double vLim = param[1];
 		double kCri = param[2];
 		double kJam = param[3];
+		double vCri = param[4];
     	
     	if (k < kCri) {
     		if (k>=0) 
     			return fd.calcQ(param);
     		else
-    			return -1*fd.calcQ(new double[]{-param[0],param[1],param[2],param[3]});
+    			return -1*fd.calcQ(new double[]{-param[0],param[1],param[2],param[3],param[4]});
     	}
     		
     	else
@@ -408,6 +377,7 @@ public class MacroCell {
 		double vLim = param[1];
 		double kCri = param[2];
 		double kJam = param[3];
+		double vCri = param[4];
     	if (k < kCri) {
     		return fd.calcQCap(param);
     	}
@@ -416,7 +386,7 @@ public class MacroCell {
     		if (k<=kJam) 
     			return fd.calcQ(param);
     		else
-    			return -1*fd.calcQ(new double[]{2*param[3]-param[0],param[1],param[2],param[3]});
+    			return -1*fd.calcQ(new double[]{2*param[3]-param[0],param[1],param[2],param[3],param[4]});
 
     		
     	}
@@ -424,18 +394,32 @@ public class MacroCell {
     public void calcFluxOut() {
     	
     	FluxOut = nodeOut.fluxesIn[indexNodeOut];
-    	
+    	if (FluxOut<0) {
+    		throw new Error("kan niet");
+    	}
     			
     }
     public void calcFluxIn() {
     	
     	FluxIn = nodeIn.fluxesOut[indexNodeIn];
+    	if (FluxIn<0) {
+    		throw new Error("kan niet");
+    	}
     			
     }
     public void updateDensity() {
     	
     	KCell = KCell + model.dt/l*(FluxIn - FluxOut);
-    	
+    	if (KCell <0 || KCell > kJam) {
+    		System.out.println("error: "+(KCell - model.dt/l*(FluxIn - FluxOut)));
+    	}
+    	updateVariables();
+    }
+    public void updateVariables() {
+    	if (KCell <0 || KCell > kJam) {
+    		System.out.println("error: "+(KCell - model.dt/l*(FluxIn - FluxOut)));
+    	}
+    	//KCell = Math.max(Math.min(KCell, kJam),0);
     	QCell = calcQ(KCell);
     	VCell = calcV(KCell);
     }
@@ -451,9 +435,13 @@ public class MacroCell {
     
     public void draw(GraphicsPanel graphicsPanel) {
     	//Color color = getDensColor(KCell); 
-    	//Color color = getDensColor(new Random().nextInt()); 
-    	Color color = getVelocityColor(VCell); 
-    	graphicsPanel.setStroke((float) (5+(KCell/(kJam/lanes))*15));
+    	//Color color = getDensColor(new Random().nextInt());
+    	//graphicsPanel.setStroke((float) (1*(5+(KCell/(kJam/lanes))*15)));
+    	graphicsPanel.setStroke((float) (1*(lanes*5)));
+    	Color color = Color.BLACK; 
+    	if (this.selected == false)
+    		color = getVelocityColor(VCell); 
+    	
 		graphicsPanel.setColor(color);
 		graphicsPanel.drawPolyLine(vertices);
    	
@@ -505,19 +493,36 @@ public class MacroCell {
     /**
      * Retrieve the left MacroCell of this MacroCell.
      * @return MacroCell; the left MacroCell of this MacroCell
-     */
+     *//*
     public MacroCell getLeft_r() {
     	return left;
     }
     
-    /**
+    *//**
      * Retrieve the right MacroCell of this MacroCell.
      * @return MacroCell; the right MacroCell of this MacroCell
-     */
+     *//*
     public MacroCell getRight_r() {
     	return right;
+    }*/
+    public double getFluxIn_r() {
+    	return FluxIn;
     }
-    
+    public double getFluxOut_r() {
+    	return FluxOut;
+    }
+    public double getTF_r() {
+    	if (nodeOut instanceof NodeBoundaryOut)
+    		return 1;
+    	else
+    		return nodeOut.turningRatio[0][0];
+    }
+    public double getInflow_r() {
+    	if (nodeIn instanceof NodeBoundaryIn)
+    	return ((NodeBoundaryIn) nodeIn).getInflow();
+    	else
+    		return 0;
+    }
     /**
      * Return the destination of this MacroCell.
      * @return Integer; the destination of this MacroCell, or a negative value if
@@ -559,7 +564,15 @@ public class MacroCell {
     public double getK_r() {
     	return KCell;
     }
-    
+    public double getKCri_r() {
+    	return kCri;
+    }
+    public double getVCri_r() {
+    	return vCri;
+    }
+    public double getCapacity_r() {
+    	return vCri*kCri;
+    }
     /**
      * Retrieve the average speed of this MacroCell.
      * @return Double; the average speed of this MacroCell
@@ -567,7 +580,21 @@ public class MacroCell {
     public double getV_r() {
     	return VCell;
     }
-    
+    public double getLanes_r() {
+    	return lanes;
+    }
+    public ArrayList<Vertex> getVertices_r() {
+    	return vertices;
+    }
+    public double getLength_r() {
+    	return l;
+    }
+    public double getCNodeIn_r() {
+    	return configNodeIn;
+    }
+    public double getCNodeOut_r() {
+    	return configNodeOut;
+    }
     
     /**
      * Sets the flow of this MacroCell.
@@ -692,5 +719,59 @@ public class MacroCell {
 	 */
 	public void setConfigNodeOut(int configNodeOut) {
 		this.configNodeOut = configNodeOut;
+	}
+	public double[] getSquaredDistanceToVertices(Vertex v) {
+		double loc = Double.MAX_VALUE;
+		if (vertices.size() == 1) {
+			return new double[]{v.squaredDistance(vertices.get(0)),loc,0};
+		} else {
+			double sqrDistance = Double.MAX_VALUE;
+			int iSelected = 0;
+			double distanceFromBegin = 0;
+			for (int i=0; i<vertices.size()-1; i++) {
+				double potSqrDistance= Double.MAX_VALUE;
+				double potLoc = Double.MAX_VALUE;
+				Vertex a = vertices.get(i);
+				Vertex b = vertices.get(i+1);
+				double length = a.squaredDistance(b);
+				if (length == 0) {
+					potSqrDistance = v.squaredDistance(a);
+					potLoc = 0;
+				} else{
+				double t = ((Vertex.minus(v, a)).dotProduct(Vertex.minus(b, a)))/length;
+				potLoc = t;
+				if (t<0)
+					potSqrDistance = v.squaredDistance(a);
+				else if (t>1)
+					potSqrDistance = v.squaredDistance(b);
+				else 
+					potSqrDistance = v.squaredDistance(Vertex.plus(a,Vertex.scalarMultiplication(t,Vertex.minus(b, a))));
+				}
+				
+				if (potSqrDistance < sqrDistance) {
+					sqrDistance = Math.min(sqrDistance,potSqrDistance);
+					loc = potLoc;
+					iSelected = i;
+				
+				}
+				
+				
+			}
+			if (iSelected > 0) {
+				for (int i = 0; i<iSelected; i++) {
+					distanceFromBegin += vertices.get(i).distance(vertices.get(i+1));
+				}
+			}
+			distanceFromBegin += vertices.get(iSelected).distance(vertices.get(iSelected+1)) * loc;
+			return new double[]{sqrDistance,loc, distanceFromBegin};
+		}
+		
+	}
+	public int isCongested() {
+		if (VCell < (vCri - 0.001)) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 }

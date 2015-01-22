@@ -15,12 +15,13 @@ public class FDTrian implements IFD {
 		double vLim = param[1];
 		double kCri = param[2];
 		double kJam = param[3];
+		double e = 0.001;
 		
-		
-		if (k<0 || k > kJam) {
-    		throw new Error ("density is not correct" + Double.toString(k));
+		if (k<0-e || k > kJam+e) {
+    		System.out.println("density is not correct" + Double.toString(k));
     	
-		} else if (k<kCri) {
+		}
+if (k<kCri) {
     		/** triangular FD **/
     		return k*vLim;
 		} else {
@@ -36,11 +37,12 @@ public class FDTrian implements IFD {
 		double vLim = param[1];
 		double kCri = param[2];
 		double kJam = param[3];
-		
-		if (k<0 || k > kJam) {
-    		throw new Error ("density is not correct" + Double.toString(k));
+		double e = 0.001;
+		if (k<0-e || k > kJam+e) {
+    		System.out.println("density is not correct" + Double.toString(k));
     	
-		} else if (k<kCri) {
+		}
+		if (k<kCri) {
     		/** triangular FD **/
     		return vLim;
 		} else {
@@ -91,7 +93,7 @@ public double calcQCap(MacroCell mc) {
 	return calcQ(param);
 }
 public double calcQCap(double[] parameters) {
-	double[] param = new double[]{parameters[1], parameters[0], parameters[1], parameters[2]};
+	double[] param = new double[]{parameters[2], parameters[1], parameters[2], parameters[3]};
 	return calcQ(param);
 	
 }

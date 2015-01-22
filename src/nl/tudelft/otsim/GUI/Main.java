@@ -19,6 +19,11 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.TreeMap;
@@ -112,6 +117,7 @@ public class Main extends JPanel implements ActionListener {
         			Main.mainFrame.vehicleLifeLogFileName = right;
         		else if (left.equalsIgnoreCase("GenerateEvent"))
     				Main.mainFrame.actionPerformed(new ActionEvent(Main.mainFrame, 0, right));
+        		
         		else if (left.equalsIgnoreCase("RunSimulation"))
         			Main.mainFrame.runSimulation();
         		else if (left.equalsIgnoreCase("SetStatus"))
@@ -264,6 +270,7 @@ public class Main extends JPanel implements ActionListener {
         menuView.add(makeMenuItem("Zoom to node ...", "zoomToNode", null, true));
         menuView.add(makeMenuItem("Zoom to lane ...", "zoomToLane", null, true));
         menuView.add(makeMenuItem("Zoom to vehicle ...", "zoomToVehicle", null, true));
+        menuView.add(makeMenuItem("Zoom to coordinate ...", "zoomToVertex", null, true));
 
         // Show the menu
         if (null != parent) {
@@ -731,8 +738,31 @@ public class Main extends JPanel implements ActionListener {
 			return config + model.exportToMicroSimulation();
 		if (type.equals(RoadwaySimulator.simulatorType))
 			return config + model.exportToSubMicroSimulation();
-		if (type.equals(MacroSimulator.simulatorType))
+		if (type.equals(MacroSimulator.simulatorType)) {
+			//return config + model.exportToMacroSimulation();
+			/*try {
+				Path path = FileSystems.getDefault().getPath("C:\\Users\\Friso\\Documents\\PilotDatafusie", "Netwerk_Datafusie_fixedNodesTest3.txt");
+				String fileContent = new String(Files.readAllBytes(path), "UTF-8");
+				Path path2 = FileSystems.getDefault().getPath("C:\\Users\\Friso\\Documents\\PilotDatafusie", "detectorCoordinatenFixed.txt");
+				String fileContent2 = new String(Files.readAllBytes(path2), "UTF-8");
+				String configuration = "Endtime:\t3600\nSeed:\t1\n"+fileContent+"\n" + fileContent2;
+				
+				Path path = FileSystems.getDefault().getPath("C:\\Users\\Friso\\Documents\\Thesis", "Netwerk_Rotterdam.txt");
+				String fileContent = new String(Files.readAllBytes(path), "UTF-8");
+				//Path path2 = FileSystems.getDefault().getPath("C:\\Users\\Friso\\Documents\\PilotDatafusie", "detectorCoordinatenFixed.txt");
+				//String fileContent2 = new String(Files.readAllBytes(path2), "UTF-8");
+				String configuration = "Endtime:\t3600\nSeed:\t1\n"+fileContent;
+				return config + configuration;
+				
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
 			return config + model.exportToMacroSimulation();
+		}
 		throw new Error("Do not know how to create configuration of type " + type);
 	}
 	
@@ -1075,7 +1105,7 @@ public class Main extends JPanel implements ActionListener {
 					mapping.put("vehicle_" + m.id, m);
 			} else
 				throw new Error("Collecting vehicle list not supported in simulator " + gpc.toString());
-		} else
+		}  else
 			throw new Error("Don't know how to build a list of " + what);
 		String selected = (String) JOptionPane.showInputDialog(new JFrame(), "", "Please select", JOptionPane.PLAIN_MESSAGE, null, mapping.keySet().toArray(), "");
 		if (null == selected)
@@ -1105,6 +1135,30 @@ public class Main extends JPanel implements ActionListener {
 		}
 		if (null != bbox)
 			setZoomRect(bbox, margin);			
+	}
+	public void showZoomVertex() {
+		String selected = (String) JOptionPane.showInputDialog("Please input a Vertex");
+		//String selected = (String) JOptionPane.showInputDialog(new JFrame(), "", "Please select", JOptionPane.PLAIN_MESSAGE, null, mapping.keySet().toArray(), "");
+		if (null == selected)
+			return;
+		int margin = 20;
+		Line2D.Double bbox = null;
+		Vertex v = new Vertex(selected);
+		bbox = Planar.expandBoundingBox(bbox,v.getX(), v.getY());
+		if (null != bbox)
+			setZoomRect(bbox, margin);	
+	}
+	public void showZoomRect() {
+		String selected = (String) JOptionPane.showInputDialog("Please input a Vertex");
+		//String selected = (String) JOptionPane.showInputDialog(new JFrame(), "", "Please select", JOptionPane.PLAIN_MESSAGE, null, mapping.keySet().toArray(), "");
+		if (null == selected)
+			return;
+		int margin = 20;
+		Line2D.Double bbox = null;
+		String[] sel = selected.split(" ");
+		Vertex o = new Vertex(sel[0]);
+		Vertex v = new Vertex(sel[1]);
+		setZoomRect(new Line2D.Double(o.getX(),o.getY(),v.getX(),v.getY()), margin);	
 	}
 	
 	@Override
@@ -1167,6 +1221,17 @@ public class Main extends JPanel implements ActionListener {
 			showZoomDialog("node");
 		else if ("zoomToVehicle".equals(command))
 			showZoomDialog("vehicle");
+		else if ("zoomToVertex".equals(command))
+			showZoomVertex();
+		else if (command.startsWith("zoomToRect"))
+			try {
+				System.out.println(command);
+				String[] test = command.split("[ ]");
+				setZoomRect(new Line2D.Double(Double.parseDouble(test[1]),Double.parseDouble(test[2]),Double.parseDouble(test[3]),Double.parseDouble(test[4])),20);
+			} catch (NumberFormatException e) {
+				WED.showProblem(WED.ENVIRONMENTERROR, "Error switching to tab \"%s\"", command.split("[ ]")[1]);
+			}
+			
 		else if ("MeasurementPlanChanged".equals(command))
 			switchMeasurementPlan();
 		else if ("EditMeasurementPlanName".equals(command))
@@ -1177,6 +1242,8 @@ public class Main extends JPanel implements ActionListener {
 			deleteMeasurementPlan();
 		else if (command.startsWith("SelectTab"))
 			try {
+				System.out.println(command);
+				String[] test = command.split("[ ]");
 				tabbedPaneProperties.setSelectedIndex(Integer.parseInt(command.split("[ ]")[1]));
 			} catch (NumberFormatException e) {
 				WED.showProblem(WED.ENVIRONMENTERROR, "Error switching to tab \"%s\"", command.split("[ ]")[1]);

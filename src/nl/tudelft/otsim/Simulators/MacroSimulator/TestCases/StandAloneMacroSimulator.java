@@ -1,6 +1,11 @@
 package nl.tudelft.otsim.Simulators.MacroSimulator.TestCases;
 
 import java.awt.BorderLayout;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import nl.tudelft.otsim.Events.Scheduler;
@@ -22,10 +27,12 @@ public class StandAloneMacroSimulator {
 
 	/**
 	 * @param args String[]; program arguments
+	 * @throws IOException 
+	 * @throws UnsupportedEncodingException 
 	 */
-	public static void main(String[] args) {
-		StandAlone sa = new StandAlone();
-		sa.main(new String[0]);
+	public static void main(String[] args) throws UnsupportedEncodingException, IOException {
+		//StandAlone sa = new StandAlone();
+		//sa.main(new String[0]);
 		//sa.add(Main.mainFrame = new Main(sa), BorderLayout.CENTER);
 		//Main.initialized = true;
        // Main.mainFrame.setVisible(true);
@@ -39,7 +46,7 @@ public class StandAloneMacroSimulator {
 				+ "Roadway:	1	from	2	to	3	speedlimit	120	lanes	1	vertices	(3000.000,-0.250,0.000)	(3500.000,-2.000,0.000)	ins	0	outs\n"
 				+ "TrafficClass	passengerCar_act	4.000	140.000	-6.000	0.900000	600.000\nTripPattern	numberOfTrips:	[0.000/"+inflow+"][0.000/1.000000]	LocationPattern:	[z1, z2]	Fractions	passengerCar_act:1.000000\nTripPatternPath	numberOfTrips:	[0.000/"+inflow+"][0.000/1.000000]	NodePattern:	[origin ID=1 (0.00m, 0.00m, 0.00m), destination ID=2 (3500.00m, 0.00m, 0.00m)]\nPath:	1.00000	nodes:	1	2	3";
 *///double inflowBoundary = (2000.0/3600.0);
-		String otsimConfiguration = "EndTime:	3600.00\nSeed:	1\n"
+		/*String otsimConfiguration = "EndTime:	3600.00\nSeed:	1\n"
 				+ "Roadway:	0	from	10	to	8	speedlimit	130	lanes	3	vertices	(8032.358,-5.250,0.000)	(8035.027,-5.250,0.000)	(9985.293,-5.250,0.000)	(10000.000,-5.250,0.000)	ins	10	outs	8\n"
 				+ "Roadway:	1	from	2	to	9	speedlimit	130	lanes	1	vertices	(9601.050,-301.400,0.000)	(9986.834,-12.062,0.000)	(10001.050,-1.400,0.000)	ins	outs	9\n"
 				+ "Roadway:	2	from	1	speedlimit	130	lanes	3	vertices	(0.000,-5.250,0.000)	(7600.000,-5.250,0.000)	ins	outs	3\n"
@@ -62,9 +69,15 @@ public class StandAloneMacroSimulator {
 				+ "Path:	1.000000	nodes:	2	9	7	6\n"
 				+ "TripPattern	numberOfTrips:	[0.000/1000.000000][0.000/1.000000]	LocationPattern:	[z1, z4]	Fractions	PassengerCar:0.900000	Truck:0.100000\n"
 				+ "TripPatternPath	numberOfTrips:	[0.000/1000.000000][0.000/1.000000]	NodePattern:	[origin1 ID=1 (0.00m, 0.00m, 0.00m), destination2 ID=5 (8400.00m, -300.00m, 0.00m)]\n"
-				+ "Path:	1.000000	nodes:	1	11a	12	5";
+				+ "Path:	1.000000	nodes:	1	11a	12	5";*/
+		
+		
+		Path path = FileSystems.getDefault().getPath("C:\\Users\\Friso\\Documents\\PilotDatafusie", "netwerk2.txt");
+		String fileContent = new String(Files.readAllBytes(path), "UTF-8");
+		String otsimConfiguration = fileContent;
+		System.out.println(otsimConfiguration);
 		//System.out.println(inflowBoundary);
-		Scheduler scheduler = new Scheduler(MacroSimulator.simulatorType, Main.mainFrame.graphicsPanel, otsimConfiguration);
+		Scheduler scheduler = new Scheduler(MacroSimulator.simulatorType, new FakeGraphicsPanel(), otsimConfiguration);
 		// Do something with the scheduler
 		Model macromodel = (Model) scheduler.getSimulator().getModel();
 		macromodel.init();
