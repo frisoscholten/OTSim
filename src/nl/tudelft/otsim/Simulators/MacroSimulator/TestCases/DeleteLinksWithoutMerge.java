@@ -1,6 +1,7 @@
 package nl.tudelft.otsim.Simulators.MacroSimulator.TestCases;
 
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -15,7 +16,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -506,7 +509,7 @@ public class DeleteLinksWithoutMerge {
 
 
 			String folder2 = "C:\\Users\\Friso\\Documents\\Thesis";
-			String input2 = "Netwerk_Rotterdam.txt";
+			String input2 = "Netwerk_RotterdamD1.txt";
 			Path path2 = FileSystems.getDefault().getPath(folder2, input2);
 			String fileload2a = new String(Files.readAllBytes(path2), "UTF-8");
 			String fileload2 = "EndTime:\t7200.00\nSeed:\t1\nRouteBased:\tfalse\n" + fileload2a;
@@ -527,17 +530,19 @@ public class DeleteLinksWithoutMerge {
 					}
 				}
 				intSched = new Scheduler(MacroSimulator.simulatorType, Main.mainFrame.graphicsPanel, fileload2);
-
-
+				
 
 				//Scheduler intSched = new Scheduler(MacroSimulator.simulatorType, new FakeGraphicsPanel(), networkAfterSplit1+detectors);
-				for (int i = 1; i < 900; i++) {
+				/*for (int i = 1; i < 900; i++) {
 					//double time = 0;
 					intSched.stepUpTo(i*2);
 					intSched.getGraphicsPanel().repaint();;
 					System.out.println(i*2);
-				}
+				}*/
 			}
+			
+			Main.mainFrame.actionPerformed(new ActionEvent(Main.mainFrame, 0, "zoomToRect 78000 426000 103000 445000"));
+
 			ArrayList<Integer> route = new ArrayList<Integer>();
 			route.add(55904);
 			route.add(37680);
@@ -554,6 +559,158 @@ public class DeleteLinksWithoutMerge {
 			ArrayList<ArrayList<MacroCell>> possibleRoutesCells = new ArrayList<ArrayList<MacroCell>>();
 			//find first incoming cell:
 			ArrayList<MacroCell> cells = macromodel.getCells();
+			double lengthNetwork = 0;
+			for (MacroCell c: cells) {
+				lengthNetwork += c.l;
+			}
+			System.out.println("Network length: " + lengthNetwork);
+			System.out.println("nr Detectors: "+detectors.size());
+			System.out.println("Average spacing: " + lengthNetwork/detectors.size());
+
+			PrintWriter outdet;
+			outdet = new PrintWriter(folder+ "\\detectorspacings.csv");
+			outdet.println("Name;Cell;DistanceFromNode;TotalCellLength;Location");
+			for (NodeDetector n: macromodel.getDetectors()) {
+				outdet.println(n.getName() +";"+ n.getClosestCell().id +";"+ n.getDistanceFromNode() +";"+ n.getClosestCell().l +";("+n.location.getX()+","+n.location.getY()+")");
+			}
+			outdet.close();
+			
+			MacroCell firstCellD = null;
+			int firstCellDID = 60761;
+			for (MacroCell c: cells) {
+				if ( firstCellDID  == c.id) {
+					firstCellD = c;
+					System.out.println("FirstCellD found!");
+				}
+			}
+			double spacing = 2000;
+			Set<MacroCell> cellsWithDetectors = new HashSet<MacroCell>();
+			for (NodeDetector n: macromodel.getDetectors()) {
+				cellsWithDetectors.add(n.getClosestCell());
+			}
+			ArrayList<MacroCell> todo = new ArrayList<MacroCell>();
+			ArrayList<MacroCell> todoReversed = new ArrayList<MacroCell>();
+			Map<MacroCell, Double> beginMap = new HashMap<MacroCell, Double>();
+			Map<MacroCell, Double> beginMapR = new HashMap<MacroCell, Double>();
+			ArrayList<MacroCell> done = new ArrayList<MacroCell>();
+			ArrayList<Vertex> locationDetectors = new ArrayList<Vertex>(); 
+
+			//double[] l1=  firstCellD.calcPointAtDistance(spacing/2);
+			beginMap.put(firstCellD, spacing/2);
+			todo.add(firstCellD);
+
+			//locationDetectors.add(new Vertex(l1[0],l1[1],0));
+			while(todo.size() + todoReversed.size() > 0) {
+				while (todo.size()>0) {
+					MacroCell c = todo.get(0);
+					if (c.id == 1177)
+						System.out.println("test");
+					boolean contain = done.contains(c);
+					if (!done.contains(c)) {
+						double begin = beginMap.get(c);
+						double state = begin;
+						if (begin <= c.l) {
+							double[] l2=c.calcPointAtDistance(begin);
+							if (cellsWithDetectors.contains(c))
+								locationDetectors.add(new Vertex(l2[0],l2[1],0));
+							state = state+spacing;
+						}
+						
+						while (state <= c.l) {
+							double[] l2=c.calcPointAtDistance(state);
+							if (cellsWithDetectors.contains(c))
+							locationDetectors.add(new Vertex(l2[0],l2[1],0));
+							state = state+spacing;
+						}
+						double rest = Math.abs(state-c.l);
+						for (MacroCell d: c.downs) {
+							if (!done.contains(d)) {
+								beginMap.put(d, rest);
+								todo.add(d);
+								if (d.id == 1177)
+									System.out.println("test");
+
+							}
+							for (MacroCell e: d.ups) {
+								if (!e.equals(c)) {
+									todoReversed.add(e);
+									beginMapR.put(e, e.l - (spacing - rest));
+									System.out.println(e.id + ":" + (e.l - (spacing - rest)));
+									
+									if (e.id == 1177)
+										System.out.println("test");
+
+								}
+							}
+						}
+
+						done.add(c);
+					}
+					todo.remove(c);
+					//todoReversed.remove(c)
+				}
+				while (todoReversed.size()>0) {
+					MacroCell c = todoReversed.get(0);
+					if (c.id == 1177)
+						System.out.println("test");
+					if (!done.contains(c)) {
+						double begin = beginMapR.get(c);
+						double state=begin;
+						if (begin >= 0) {
+							double[] l2=c.calcPointAtDistance(begin);
+							if (cellsWithDetectors.contains(c))
+							locationDetectors.add(new Vertex(l2[0],l2[1],0));
+							state = state-spacing;
+						}
+						
+						while (state >=0) {
+							double[] l2=c.calcPointAtDistance(state);
+							if (cellsWithDetectors.contains(c))
+							locationDetectors.add(new Vertex(l2[0],l2[1],0));
+							state = state-spacing;
+						}
+						double rest = Math.abs(state);
+						for (MacroCell d: c.ups) {
+							if (!done.contains(d)) {
+								beginMapR.put(d, d.l - rest);
+								todoReversed.add(d);
+								if (d.id == 1177)
+									System.out.println("test");
+
+							}
+							for (MacroCell e: d.downs) {
+								if (!e.equals(c)) {
+									if (!done.contains(e) ) {
+										todo.add(e);
+										beginMap.put(e,(spacing - rest));
+										if (e.id == 1177)
+											System.out.println("test");
+
+									}
+								}
+							}
+						}
+
+						done.add(c);
+					}
+					todoReversed.remove(c);
+				}
+			}
+			PrintWriter outdet2;
+			outdet2 = new PrintWriter(folder+ "\\detectorsNew.csv");
+			//outdet2.println("Name;Cell;DistanceFromNode;TotalCellLength;Location");
+			int i1=1;
+			for (Vertex v: locationDetectors) {
+				outdet2.println("Detector:\t"+ (i1++) + "\t" + "("+v.getX()+","+v.getY()+")");
+			}
+			outdet2.close();
+			
+
+
+
+
+
+
 			MacroCell firstCell = null;
 			for (MacroCell c: cells) {
 				if ( route.get(0).intValue() == c.id) {
@@ -579,7 +736,7 @@ public class DeleteLinksWithoutMerge {
 			firstroute.add(firstCell);
 
 			possibleRoutesCells.add(firstroute);
-			
+
 			boolean finished = false;
 			int index = 0;
 			while (!finished) {
@@ -612,7 +769,7 @@ public class DeleteLinksWithoutMerge {
 						if (route.contains(Integer.valueOf(c.id))) {
 							progress[i]++;
 						}
-							
+
 					}
 					i++;
 				}
@@ -632,7 +789,7 @@ public class DeleteLinksWithoutMerge {
 				}
 				possibleRoutesCellsCopy = possibleRoutesCellsCopy2;
 				finished = true;
-				
+
 				for (ArrayList<MacroCell> rt: possibleRoutesCellsCopy) {
 					if (rt.get(rt.size()-1).downs.size() != 0) {
 						finished = false;
@@ -643,6 +800,19 @@ public class DeleteLinksWithoutMerge {
 			}
 			ArrayList<MacroCell> finalRoute = possibleRoutesCells.get(0);
 			LinkedHashSet<MacroCell> hashSet = new LinkedHashSet<MacroCell>(finalRoute);
+			//MacroCell c = hashSet.
+			boolean displayRoute=true;
+			if (displayRoute) {
+				for (MacroCell d: macromodel.getCells()) {
+					if (!hashSet.contains(d))
+						d.lanes = 0;
+				//c.draw(Main.mainFrame.graphicsPanel);
+			}
+			//Main.mainFrame.graphicsPanel.repaint();
+		System.out.println("klaar");	
+			}
+			
+			
 			ArrayList<NodeDetector> dets = macromodel.getDetectors();
 			ArrayList<NodeDetector> listDetectors = new ArrayList<NodeDetector>(dets.size());
 			//ArrayList<NodeDetector> listDetectors2 = new ArrayList<NodeDetector>(dets.size());
@@ -656,19 +826,19 @@ public class DeleteLinksWithoutMerge {
 				if (c.detector)
 					listDetectors.add(map.get(c));
 			}
-			
+
 			LinkedHashSet<NodeDetector> hashSetDet = new LinkedHashSet<NodeDetector>(listDetectors);
-			
+
 			int[] indices = macromodel.getIndices(hashSet);
-			for (int i = 0; i< indices.length; i++)
-				indices[i] = indices[i]+1;
-			
+			///for (int i = 0; i< indices.length; i++)
+			//	indices[i] = indices[i]+1;
+
 			System.out.println("indices = "+Arrays.toString(indices));
 
 			int[] indices2 = macromodel.getIndicesDetector(hashSetDet);
-			for (int i = 0; i< indices2.length; i++)
-				indices2[i] = indices2[i]+1;
-			
+			//for (int i = 0; i< indices2.length; i++)
+			//	indices2[i] = indices2[i]+1;
+
 			System.out.println("indicesDet = "+Arrays.toString(indices2));
 			ArrayList<MacroCell> listOfCells = (ArrayList<MacroCell>) ((Model) intSched.getSimulator().getModel()).getCells().clone();
 			Collections.sort(listOfCells,new Comparator<MacroCell>() {

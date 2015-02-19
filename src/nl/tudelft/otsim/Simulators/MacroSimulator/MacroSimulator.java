@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,6 +33,8 @@ import nl.tudelft.otsim.Simulators.SimulatedObject;
 import nl.tudelft.otsim.Simulators.Simulator;
 import nl.tudelft.otsim.Simulators.LaneSimulator.Vehicle;
 import nl.tudelft.otsim.Simulators.MacroSimulator.MacroSimulator;
+import nl.tudelft.otsim.Simulators.MacroSimulator.ExternalEvents.ExternalEvent;
+import nl.tudelft.otsim.Simulators.MacroSimulator.ExternalEvents.ExternalEvents;
 import nl.tudelft.otsim.Simulators.MacroSimulator.FundamentalDiagrams.FDs;
 import nl.tudelft.otsim.Simulators.MacroSimulator.FundamentalDiagrams.IFD;
 import nl.tudelft.otsim.Simulators.MacroSimulator.FundamentalDiagrams.FDSmulders;
@@ -106,6 +109,7 @@ public class MacroSimulator extends Simulator implements ShutDownAble{
 		HashMap<Integer, TimeScaleFunction> flows = new HashMap<Integer, TimeScaleFunction>();
 		boolean routeBased = true;
 		int nrC = 1;
+		List<ExternalEvent> externalEvents = new ArrayList<ExternalEvent>();
 
 		/*
 		 * It does make sense to first join successive roadway sections that
@@ -267,7 +271,20 @@ public class MacroSimulator extends Simulator implements ShutDownAble{
 				
 				
 				
-			} else {
+			} else if (fields[0].equals("ExternalEvent:")) {
+				ExternalEvent ext = ExternalEvents.fromString(fields[1]).create(Double.valueOf(fields[2]),Double.valueOf(fields[3]),Double.valueOf(fields[4]),Double.valueOf(fields[5]),fields[6]);
+				externalEvents.add(ext);
+				/*MacroCell sp = copySimPaths.get(idmap.indexOf(Integer.valueOf(fields[1])));
+				sp.kCriPerLane = Double.valueOf(fields[2]);
+				sp.kJamPerLane = Double.valueOf(fields[3]);
+				sp.vCriBeforeInit = Double.valueOf(fields[4]);
+				fd = FDs.fromString(fields[5]).create();*/
+				//i = i+4;
+				
+				
+				
+			}
+			else {
 				//throw new Exception("Don't know how to parse " + line);
 			}
 
@@ -459,7 +476,7 @@ public class MacroSimulator extends Simulator implements ShutDownAble{
 			//minLengthCells = 100;
 			// determine number of parts in which the cell must be split
 			int nrParts = (int) Math.floor(m.calcLength()/minLengthCells);
-			//nrParts = 1;
+			//int nrParts = 1;
 			if (nrParts == 0)
 				nrParts = 1;
 			// add the cells that are split to the list
@@ -632,6 +649,7 @@ public class MacroSimulator extends Simulator implements ShutDownAble{
 			//System.out.println("NodeIn: "+m.indexNodeIn);
 			//System.out.println("NodeOut: "+m.indexNodeOut);
 		}
+		model.setExternalEvents(externalEvents);
 		model.init();
 		if (output) {
 		for (MacroCell m: macroCells) {

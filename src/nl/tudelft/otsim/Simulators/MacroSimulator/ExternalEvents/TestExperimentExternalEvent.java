@@ -1,4 +1,4 @@
-package nl.tudelft.otsim.Simulators.MacroSimulator.TestCases;
+package nl.tudelft.otsim.Simulators.MacroSimulator.ExternalEvents;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -11,10 +11,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.AssimilationMethod;
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.EnKFRunConfiguration;
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.ErrorConfiguration;
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.ExperimentConfiguration;
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.StateDefinition;
+import nl.tudelft.otsim.Simulators.MacroSimulator.TestCases.TestEnKF;
 import Jama.Matrix;
 
-public class TestExperiment {
-	static boolean extendedOutput = false;
+public class TestExperimentExternalEvent {
+	static boolean extendedOutput = true;
 	public static void main(String[] args) {
 
 		String network = "EndTime:\t7200.00\nSeed:\t1\n"
@@ -30,7 +36,7 @@ public class TestExperiment {
 				+ "Detector:	1	(500.000,-250.000,0.000)\n"
 				+ "Detector:	2	(1000.000,-500.000,0.000)\n"
 				+ "Detector:	3	(2000.000,-250.000,0.000)\n";
-
+		String externalEvents = "ExternalEvent:	LANEDROP	1200	2400	2	1	(2000.000,-300.000,0.000)\n";
 
 
 		String[] networksplit = network.split("\n");
@@ -50,8 +56,8 @@ public class TestExperiment {
 
 
 		double[] inflowTruth = new double[]{
-				(1800.0),
-				1600.0
+				(1400.0),
+				1200.0
 
 		};
 		double [] stdInflow = new double[] {
@@ -113,7 +119,8 @@ public class TestExperiment {
 				+ "Path:	"+(1-turnfractionTruth[0])+"	nodes:	0	1	5	6	7	2	3\n"
 				+ "TripPatternPath	numberOfTrips:	"+pattern1[1]+"	NodePattern:	[origin ID=2 (0.00m, -500.00m, 0.00m), destination ID=2 (2500.00m, 0.00m, 0.00m)]\n"
 				+ "Path:	1.00000	nodes:	4	5	6	7	2	3\n"
-				+ detectors;
+				+ detectors
+				+ externalEvents;
 
 		/*String otsimConfiguration2 = networkAfterSplit2
 				+ "TripPatternPath	numberOfTrips:	"+pattern2[0]+"	NodePattern:	[origin ID=1 (0.00m, 0.00m, 0.00m), destination ID=2 (2500.00m, 0.00m, 0.00m)]\n"
@@ -140,7 +147,8 @@ public class TestExperiment {
 					+ "Path:	"+(1-turnfractionExp2[i][0])+"	nodes:	0	1	5	6	7	2	3\n"
 					+ "TripPatternPath	numberOfTrips:	"+pattern3[1]+"	NodePattern:	[origin ID=2 (0.00m, -500.00m, 0.00m), destination ID=2 (2500.00m, 0.00m, 0.00m)]\n"
 					+ "Path:	1.00000	nodes:	4	5	6	7	2	3\n"
-					+ detectors;
+					+ detectors
+					+externalEvents;
 			networkConfigs.add(networkConfig);
 		}
 		int nrSteps = (int) (7200.0/2.0 +1);
@@ -149,372 +157,20 @@ public class TestExperiment {
 		Matrix[] obsTest = TestEnKF.generateTruthValues(otsimConfigurationTruth, nrSteps, 2.0);
 
 		ArrayList<ArrayList<ErrorConfiguration>> errorConfigs = new ArrayList<ArrayList<ErrorConfiguration>>();
-		/*
-		// first experiment: 
-		double[] errorsK = new double[]{0.001,0.003,0.01};
-		double[] errorsI = new double[]{0.03,0.1,0.3};
-		double[] errorsT = new double[]{0.01,0.2,0.3};
-		double[] errorsK = new double[]{0.003};
-		double[] errorsI = new double[]{0.1};
-		double[] errorsT = new double[]{0.9,1.5,2.5};
-
-		for (double k: errorsK) {
-			for (double i: errorsI) { 
-				for (double t: errorsT) { 
-				ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-				errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,k,1.00));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,i,1.00));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,t,1.00));
-				errorConfigs.add(errorList1a);
-				}
-			}
-		}
-
-		// first MC experiment: 
-		Random rt = new Random(65);
-		double[][] bounds = new double[6][2];
-		bounds[0] = new double[]{0.001,0.01};
-		bounds[1] = new double[]{0.01,0.3};
-		bounds[2] = new double[]{0.05,0.45};
-		bounds[3] = new double[]{1.000,1.00};
-		bounds[4] = new double[]{1.000,1.00};
-		bounds[5] = new double[]{1.000,1.00};
-
-		int nrMC = 10;
-		double[][] par = new double[nrMC][6]; 
-		for (int i=0; i<nrMC;i++) {
-			int j = 0;
-			for (double[] b: bounds) {
-
-				//par[i][j] = Math.pow(b[1]/b[0],rt.nextDouble())*b[0];
-				par[i][j] = b[0] + rt.nextDouble()*(b[1]-b[0]);
-				j++;	
-
-
-
-			}
-		}
-		double[] errorsK = new double[]{0.001,0.003,0.01};
-		double[] errorsI = new double[]{0.01,0.03,0.1,0.3};
-		double[] errorsT = new double[]{0.01,0.015,0.2};
-		for (double[] p: par) {
-			ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-			errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,p[0],p[3]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,p[1],p[4]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,p[2],p[5]));
-			errorConfigs.add(errorList1a);
-			errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,0,1));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0,1));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,0,1));
-			errorConfigs.add(errorList1a);
-		}
-
-
-
-
-		// second experiment
-		// select three best MC-values:
-		Random rt = new Random(65);
-		double[][] bounds = new double[6][2];
-		bounds[0] = new double[]{0.001,0.01};
-		bounds[1] = new double[]{0.01,0.3};
-		bounds[2] = new double[]{0.05,0.45};
-		bounds[3] = new double[]{1.000,1.00};
-		bounds[4] = new double[]{1.000,1.00};
-		bounds[5] = new double[]{1.000,1.00};
-
-		int nrMC = 10;
-		double[][] par = new double[nrMC][6]; 
-		for (int i=0; i<nrMC;i++) {
-			int j = 0;
-			for (double[] b: bounds) {
-
-				//par[i][j] = Math.pow(b[1]/b[0],rt.nextDouble())*b[0];
-				par[i][j] = b[0] + rt.nextDouble()*(b[1]-b[0]);
-				j++;	
-
-
-
-			}
-		}
-		//double[][][] pars = new double[6][nrMC][6];
-		//pars[0] = 
-		double[][] par2 = new double[][]{par[4], par[9]};
-		double[] inflationbounds = new double[]{1.0, 1.05};
-		double[][] par3 = new double[10][6];
-		double[][] bounds2 = new double[][]{inflationbounds, inflationbounds, inflationbounds};
-		par3[0] = par2[0].clone();
-		par3[5] = par2[1].clone();
-		for (int i=1; i<5;i++) {
-			int j = 0;
-			par3[i] = par2[0].clone();
-			par3[i+5] = par2[1].clone();
-			for (double[] b: bounds2) {
-
-				//par[i][j] = Math.pow(b[1]/b[0],rt.nextDouble())*b[0];
-				par3[i][3+j] = b[0] + rt.nextDouble()*(b[1]-b[0]);
-				par3[i+5][3+j] = par3[i][3+j];
-				j++;	
-
-
-
-			}
-		}
-
-
-
-
-
-
-		for (double[] p: par3) {
-
-
-			ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-
-			errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,p[0],p[3]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,p[1],p[4]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,p[2],p[5]));
-			errorConfigs.add(errorList1a);
-		}
-
-		// third experiment
-		double[][] par4 = new double[][]{par3[2],par3[1],par3[9],par3[5],par3[0]};
-		for (double[] p: par4) {
-
-
-			ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-
-			errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,p[0],p[3]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,p[1],p[4]));
-			errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,p[2],p[5]));
-			errorConfigs.add(errorList1a);
-		}
-		//int[] ensemblesizes = new int[]{40,28,20,14,10,7,5};
-		int[] ensemblesizes = new int[]{20};
-		ArrayList<EnKFRunConfiguration> runConfigurations = new ArrayList<EnKFRunConfiguration>();
-		for (int e: ensemblesizes) {
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.ENKF, 20, errorConfigs.get(0), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.ENKF_SMW, 20, errorConfigs.get(0), e,60));
-
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF, 20, errorConfigs.get(3), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_SMW, 20, errorConfigs.get(3), e,60));
-
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_MEASUREMENT, 20, errorConfigs.get(2), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_GRID, 20, errorConfigs.get(1), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_GRID_SMW, 20, errorConfigs.get(1), e,60));
-
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_MEASUREMENT, 20, errorConfigs.get(4), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_GRID, 20, errorConfigs.get(3), e,60));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_GRID_SMW, 20, errorConfigs.get(3), e,60));
-
-		}
-		for (int e: ensemblesizes) {
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_MEASUREMENT, 20, errorConfigs.get(3), e));
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_MEASUREMENT, 20, errorConfigs.get(2), e));
-		}
-		int[] ensemblesizes2 = new int[]{20};
-		int[] localizationradii = new int[]{20,14,10,7,5};
-		int[] localizationFactor = new int[]{5,4,3,2,1};
-		ArrayList<EnKFRunConfiguration> runConfigurations = new ArrayList<EnKFRunConfiguration>();
-		for (int e: ensemblesizes2) {
-			runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF, 20, errorConfigs.get(0), e));
-			for (int l: localizationradii) {
-				for (int f: localizationFactor) {
-					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.ENKF, 20, errorConfigs.get(2), e));
-
-					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_MEASUREMENT, 20, errorConfigs.get(1), e));
-					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_GRID, 20, errorConfigs.get(3), e));
-					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_MEASUREMENT, l, errorConfigs.get(2), e, l*f));
-					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_GRID, l, errorConfigs.get(2), e, l*f));
-				}
-			}
-		}
-
-
-
-
-		// second experiment
-		double[] errorsK = new double[]{0.001,0.005};
-		double[] errorsI = new double[]{0.1,0,15,0.2,0.25};
-		//double[] errorsT = new double[]{1.0,2.0};
-		double[] errorsIn = new double[]{1.00,1.01};
-
-		for (double k: errorsK) {
-			for (double i: errorsI) {
-				//for (double t: errorsT) {
-				for (double in: errorsIn) {
-				ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-				errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,k,in));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,i,in));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,i/2.0,in));
-				errorConfigs.add(errorList1a);
-				}
-				//}
-			}
-		}
-
-		// third experiment
-				double[] errorsK = new double[]{0.003};
-				double[] errorsI = new double[]{0.1,0.15,0.2};
-				double[] errorsT = new double[]{1.0,1.5,2.0};
-				double[] errorsIn1 = new double[]{1.00,1.01};
-				//double[] errorsIn2 = new double[]{1.00,1.01};
-
-				for (double k: errorsK) {
-					for (double i: errorsI) {
-						for (double t: errorsT) {
-						for (double in: errorsIn1) {
-						ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-						errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,k,in));
-						errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,i,in+0.04));
-						errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,i/t,in));
-						errorConfigs.add(errorList1a);
-						}
-						}
-					}
-				}
-
-		// fourth experiment
-		double[] errorsK = new double[]{0.005};
-		double[] errorsI = new double[]{0.05,0.1,0.15,0.2};
-		double[] errorsT = new double[]{0.05,0.075,0.1,0.125,0.15};
-		double[] errorsIn1 = new double[]{1.00};
-		//double[] errorsIn2 = new double[]{1.00,1.01};
-
-		for (double k: errorsK) {
-			for (double i: errorsI) {
-				for (double t: errorsT) {
-				for (double in: errorsIn1) {
-				ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-				errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,k,1.01));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,i,1.05));
-				errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,t,1.01));
-				errorConfigs.add(errorList1a);
-				}
-				}
-			}
-		}
-		// fifth experiment
-				double[] errorsK = new double[]{0.005};
-				double[] errorsI = new double[]{0.1,0.15};
-				double[] errorsT = new double[]{0.075,0.1,0.125};
-				double[] errorsIn1 = new double[]{1.00};
-				//double[] errorsIn2 = new double[]{1.00,1.01};
-
-				for (double k: errorsK) {
-					for (double i: errorsI) {
-						for (double t: errorsT) {
-						for (double in: errorsIn1) {
-						ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-						errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,k,1.01));
-						errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,i,1.05));
-						errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,t,1.01));
-						errorConfigs.add(errorList1a);
-						}
-						}
-					}
-				}
-		//errorConfigs.add(errorList);
-		ArrayList<ErrorConfiguration> errorList1 = new ArrayList<ErrorConfiguration>();
-			errorList1.add(new ErrorConfiguration(StateDefinition.K_CELL,0.005,1.01));
-			errorList1.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.15,1.05));
-			errorList1.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.05,1.01));
-			errorConfigs.add(errorList1);
-
-		ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
-		errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,0.005,1.00));
-		errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.1,1.00));
-		errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.05,1.00));
-		errorConfigs.add(errorList1a);
-		ArrayList<ErrorConfiguration> errorList2 = new ArrayList<ErrorConfiguration>();
-			errorList2.add(new ErrorConfiguration(StateDefinition.K_CELL,0.001,1.01));
-			errorList2.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.02,1.05));
-			errorList2.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.01,1.01));
-			errorConfigs.add(errorList2);
-			ArrayList<ErrorConfiguration> errorList2a = new ArrayList<ErrorConfiguration>();
-			errorList2a.add(new ErrorConfiguration(StateDefinition.K_CELL,0.001,1.00));
-			errorList2a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.02,1.00));
-			errorList2a.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.01,1.00));
-			errorConfigs.add(errorList2a);
-			ArrayList<ErrorConfiguration> errorList3 = new ArrayList<ErrorConfiguration>();
-			errorList3.add(new ErrorConfiguration(StateDefinition.K_CELL,0.01,1.02));
-			errorList3.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.15,1.05));
-			errorList3.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.1,1.01));
-			errorConfigs.add(errorList3);
-			ArrayList<ErrorConfiguration> errorList3a = new ArrayList<ErrorConfiguration>();
-			errorList3a.add(new ErrorConfiguration(StateDefinition.K_CELL,0.01,1.00));
-			errorList3a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.15,1.00));
-			errorList3a.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.1,1.00));
-			errorConfigs.add(errorList3a);
-
-
-		ArrayList<AssimilationMethod> assimilationMethods = new ArrayList<AssimilationMethod>();
-		assimilationMethods.add(AssimilationMethod.ENKF);
-		//assimilationMethods.add(AssimilationMethod.ENKF_SMW);
-		assimilationMethods.add(AssimilationMethod.DENKF);
-		//assimilationMethods.add(AssimilationMethod.DENKF_SMW);
-
-
-		assimilationMethods.add(AssimilationMethod.LENKF_MEASUREMENT);
-		assimilationMethods.add(AssimilationMethod.LENKF_GRID);
-		assimilationMethods.add(AssimilationMethod.DENKF_MEASUREMENT);
-		assimilationMethods.add(AssimilationMethod.DENKF_GRID);
-
-		ArrayList<Integer> localizationWidths = new ArrayList<Integer>();
-		//localizationWidths.add(1);
-		//localizationWidths.add(5);
-		//localizationWidths.add(10);
-		//localizationWidths.add(15);
-		localizationWidths.add(20);
-		//localizationWidths.add(25);
-		//localizationWidths.add(35);
-		//localizationWidths.add(45);
-		//localizationWidths.add(60);
-		//localizationWidths.add(9999);
-
-		ArrayList<Integer> inflowTFFactors = new ArrayList<Integer>();
-
-		inflowTFFactors.add(3);
-
-
-
-		ArrayList<Integer> ensembleSizes = new ArrayList<Integer>();
-		ensembleSizes.add(20);
-		//ensembleSizes.add(14);
-		//ensembleSizes.add(10);
-		//ensembleSizes.add(7);
-		//ensembleSizes.add(5);
-		//ensembleSizes.add(40);
-
-		boolean forecastsNeeded = false;
-
-		//ExperimentConfiguration expConfig = new ExperimentConfiguration(errorConfigs,assimilationMethods,networkConfigs,localizationWidths, inflowTFFactors, ensembleSizes, forecastsNeeded);
-		ExperimentConfiguration expConfig = new ExperimentConfiguration(runConfigurations,networkConfigs, forecastsNeeded);
-
-
-
-
-
-
-
-
-		ArrayList<ErrorConfiguration> errorList = new ArrayList<ErrorConfiguration>();
-		errorList.add(new ErrorConfiguration(StateDefinition.K_CELL,0.000,1.00));
-		errorList.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.00,1.00));
-		errorList.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.00,1.00));
-		expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.ENKF, 5, errorList, 2));
-		 */
+		
 		int[] route = new int[obsTest[1].getColumnDimension()];
 		for (int i=0; i< obsTest[1].getColumnDimension(); i++)
 			route[i] = i;
 		
-		for (int i = 7; i<=7; i++) {
+		int[] route2 = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 38, 39, 40, 41, 42, 43, 44, 45, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 46, 47, 48, 49, 50, 51, 52, 53, 30, 31, 32, 33, 34, 35, 36, 37};
+		
+		for (int i = 1; i<=1; i++) {
 			String prefix = Long.toString(System.currentTimeMillis());
 			ExperimentConfiguration expConfig = null;
 			String method = "experiment"+i;
 			try {
-				Method m = TestExperiment.class.getMethod(method, ArrayList.class);
-				expConfig = (ExperimentConfiguration) m.invoke(TestExperiment.class, networkConfigs);
+				Method m = TestExperimentExternalEvent.class.getMethod(method, ArrayList.class);
+				expConfig = (ExperimentConfiguration) m.invoke(TestExperimentExternalEvent.class, networkConfigs);
 			} catch (NoSuchMethodException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -556,7 +212,7 @@ public class TestExperiment {
 		bounds[4] = new double[]{1.000,1.00};
 		bounds[5] = new double[]{1.000,1.00};
 
-		int nrMC = 10;
+		int nrMC = 1;
 		double[][] par = new double[nrMC][6]; 
 		for (int i=0; i<nrMC;i++) {
 			int j = 0;
@@ -619,7 +275,7 @@ public class TestExperiment {
 		//ensembleSizes.add(5);
 		//ensembleSizes.add(40);
 
-		boolean forecastsNeeded = true;
+		boolean forecastsNeeded = false;
 
 		ExperimentConfiguration expConfig = new ExperimentConfiguration(errorConfigs,assimilationMethods,networkConfigs,localizationWidths, inflowTFFactors, ensembleSizes, forecastsNeeded, extendedOutput);
 		//ExperimentConfiguration expConfig = new ExperimentConfiguration(runConfigurations,networkConfigs, forecastsNeeded);

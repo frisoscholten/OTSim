@@ -5,12 +5,12 @@ public class ErrorConfiguration {
 	double initialError;
 	double inflationFactor;
 	
-	ErrorConfiguration(StateDefinition id, double initialError, double inflationFactor) {
+	public ErrorConfiguration(StateDefinition id, double initialError, double inflationFactor) {
 		this.id = id;
 		this.initialError = initialError; 
 		this.inflationFactor = inflationFactor;
 	}
-	ErrorConfiguration(StateDefinition id, double initialError) {
+	public ErrorConfiguration(StateDefinition id, double initialError) {
 		this(id, initialError, 1);
 	}
 

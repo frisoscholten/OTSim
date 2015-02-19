@@ -25,11 +25,18 @@ import nl.tudelft.otsim.Utilities.TimeScaleFunction;
 import Jama.Matrix;
 
 public class TestExperimentRotterdam {
-	static boolean extendedOutput = false;
+	static boolean extendedOutput = true;
 	public static void main(String[] args) {
 		String folder = "C:\\Users\\Friso\\Documents\\Thesis";
+		//String folder = "";
 		String input = "Netwerk_Rotterdam.txt";
-		Path path = FileSystems.getDefault().getPath(folder, input);
+		Path path;
+		if (folder.isEmpty()) {
+			path = FileSystems.getDefault().getPath(input);
+		} else {
+			path = FileSystems.getDefault().getPath(folder, input);
+		}
+		
 
 		try {
 			String fileload = new String(Files.readAllBytes(path), "UTF-8");
@@ -80,11 +87,11 @@ public class TestExperimentRotterdam {
 			String[] networksplit2 = networkAfterSplit1.split("\n");
 			int seed = 619;
 			Random r = new Random(seed);
-			int nrExperiments =1;
-			boolean openGUI = true;
+			int nrExperiments =3;
+			boolean openGUI = false;
 			int nrShows;
-			//nrShows = 0;
-			nrShows = Integer.MAX_VALUE;
+			nrShows = 0;
+			//nrShows = Integer.MAX_VALUE;
 			for (int j = 0; j< nrShows; j++) {
 
 				Scheduler intSched;
@@ -151,7 +158,7 @@ public class TestExperimentRotterdam {
 
 
 				inflowTruth[t] = Double.parseDouble(((in.split("\t")[2]).split(":",2)[0]).split("/")[1]);
-				stdInflow[t] = inflowTruth[t]/10;
+				stdInflow[t] = inflowTruth[t]/6;
 				//inflowTL[t] = ((NodeBoundaryIn) n).getInflowPerLane();
 				t++;
 			}
@@ -159,7 +166,7 @@ public class TestExperimentRotterdam {
 
 			for (String tf: tfs) {
 				turnfractionTruth[t] = Double.parseDouble(tf.split("\t")[2]);
-				stdTurnFraction[t] = turnfractionTruth[t]/20;
+				stdTurnFraction[t] = turnfractionTruth[t]/10;
 				t++;
 			}
 
@@ -201,11 +208,11 @@ public class TestExperimentRotterdam {
 
 		}*/
 			String[] pattern1 = inf;
-
+			Random rTF = new Random(12345);
 			double[][] turnfractionExp2 = new double[nrExperiments][turnfractionTruth.length];
 			for (int n =0; n<nrExperiments; n++) {
 				for (int i = 0; i<turnfractionTruth.length; i++) {
-					turnfractionExp2[n][i] = Math.min(1,Math.max(0, turnfractionTruth[i] + r.nextGaussian()*stdTurnFraction[i]));
+					turnfractionExp2[n][i] = Math.min(1,Math.max(0, turnfractionTruth[i] + rTF.nextGaussian()*stdTurnFraction[i]));
 				}
 			}
 			String[] tfExperiments = new String[nrExperiments];
@@ -297,8 +304,12 @@ public class TestExperimentRotterdam {
 			//String prefix = Long.toString(System.currentTimeMillis());
 
 			//long[][][] computationTimes = TestEnKF.performExperiment(obsTest, expConfig, prefix);
-			int[] route = new int[]{2958, 2959, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968, 2969, 2970, 2971, 2972, 2973, 2974, 2975, 1875, 1876, 1877, 1878, 1879, 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1891, 1892, 1893, 1894, 1895, 1896, 1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904, 1437, 1438, 1439, 1440, 2646, 2647, 2648, 2649, 2650, 2651, 2652, 2653, 2654, 2655, 2656, 2657, 2658, 2659, 2660, 2661, 2662, 2663, 2664, 2665, 2666, 2667, 2668, 2669, 2670, 2671, 2672, 2673, 2674, 2675, 2676, 2677, 2678, 2679, 4473, 4474, 4475, 4476, 4477, 4478, 4479, 4480, 4481, 4482, 4483, 4484, 4485, 4486, 4487, 4488, 4489, 4490, 3566, 3567, 3568, 3569, 3570, 3571, 3572, 3573, 3574, 3575, 3576, 3577, 3578, 3579, 3580, 3581, 3582, 3583, 3584, 3585, 3586, 3587, 3588, 3589, 3590, 3591, 3592, 3593, 3594, 3595, 3596, 3597, 3598, 3599, 3600, 3601, 3602, 3603, 3604, 3605, 3606, 3607, 3608, 3609, 3610, 3611, 3612, 3613, 3614, 3615, 3616, 3617, 3618, 3619, 3620, 3621, 3622, 3623, 3624, 3625, 3626, 3627, 3628, 3629, 3630, 3631, 3632, 3633, 3634, 3635, 3636, 3637, 3638, 3639, 3640, 3641, 3642, 3643, 3644, 3645, 3646, 3647, 3648, 3649, 3650, 3651, 3652, 3653, 3654, 3655, 3656, 3657, 3658, 3659, 3660, 3661, 3662, 3663, 3664, 3665, 3666, 3667, 3668, 3669, 3670, 3671, 3672, 3673, 2596, 2597, 2598, 2599, 2600, 2601, 2602, 2603, 2604, 2605, 2606, 2607, 2608, 2609, 2610, 2611, 2612, 2613, 3778, 3779, 3780, 3781, 3782, 3783, 3784, 3785, 3786, 3787, 3788, 3789, 3790, 3791, 3792, 3793, 3794, 3795, 3796, 3797, 3798, 3799, 3800, 3801, 3802, 3803, 3804, 3805, 3806, 3807, 3808, 3809, 3810, 3811, 3812, 3813, 3814, 3815, 3816, 3817, 3818, 3819, 3217, 3218, 3219, 3220, 3221, 3222, 3223, 3224, 3225, 3226, 3227, 3228, 3229, 3230, 3231, 2181, 2182, 2183, 2184, 2185, 2186, 2187, 2188, 2189, 2190, 2191, 2192, 2193, 2194, 2195, 2196, 2197, 2198, 2199, 2200, 2201, 2202, 2203, 2204, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 2552, 2553, 2554, 2555, 2556, 2557, 2558, 2559, 2560, 2561, 2562, 2563, 2564, 2565, 2566, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 442, 443, 444, 445, 446, 447, 448, 449, 2097, 2098, 2099, 2100, 2101, 2102, 2103, 2104, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 3401, 3402, 3403, 3404, 3405, 3406, 3407, 3408, 3409, 4491, 4492, 4493, 4494, 4495, 4496, 4497, 4498, 4499, 4500, 4501, 4502, 4503, 4504, 4505, 4506, 4507, 4508, 4509, 4510, 4511, 4512, 4513, 4514, 4515, 4177, 4178, 4179, 4180, 4181, 4182, 4183, 4184, 2841, 2842, 2843, 2844, 2845, 2846, 2847, 2848, 2849, 2850, 2851, 2852, 4277, 4278, 4279, 4280, 4281, 4282, 4283, 4284, 4285, 4286, 4287, 4288, 4289, 4290, 4291, 4292, 4293, 4294, 4295, 4296, 4297, 4298, 4299, 4300, 4301, 4302, 4303, 4304, 4305, 4306, 4307, 4308, 4309, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325, 4326, 4327, 4328, 4329, 4330, 4331, 4332, 4333, 4334, 4335, 4336, 4337, 4338, 4339, 4340, 4341, 4342, 4343, 4344, 4345, 4346, 4347, 4348, 4349, 4350, 4351, 4352, 4353, 4354, 4355, 4356, 4357, 4358, 4359};
-			int[] experiments = new int[]{1};
+			//oude route
+			//int[] route = new int[]{2958, 2959, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968, 2969, 2970, 2971, 2972, 2973, 2974, 2975, 1875, 1876, 1877, 1878, 1879, 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1891, 1892, 1893, 1894, 1895, 1896, 1897, 1898, 1899, 1900, 1901, 1902, 1903, 1904, 1437, 1438, 1439, 1440, 2646, 2647, 2648, 2649, 2650, 2651, 2652, 2653, 2654, 2655, 2656, 2657, 2658, 2659, 2660, 2661, 2662, 2663, 2664, 2665, 2666, 2667, 2668, 2669, 2670, 2671, 2672, 2673, 2674, 2675, 2676, 2677, 2678, 2679, 4473, 4474, 4475, 4476, 4477, 4478, 4479, 4480, 4481, 4482, 4483, 4484, 4485, 4486, 4487, 4488, 4489, 4490, 3566, 3567, 3568, 3569, 3570, 3571, 3572, 3573, 3574, 3575, 3576, 3577, 3578, 3579, 3580, 3581, 3582, 3583, 3584, 3585, 3586, 3587, 3588, 3589, 3590, 3591, 3592, 3593, 3594, 3595, 3596, 3597, 3598, 3599, 3600, 3601, 3602, 3603, 3604, 3605, 3606, 3607, 3608, 3609, 3610, 3611, 3612, 3613, 3614, 3615, 3616, 3617, 3618, 3619, 3620, 3621, 3622, 3623, 3624, 3625, 3626, 3627, 3628, 3629, 3630, 3631, 3632, 3633, 3634, 3635, 3636, 3637, 3638, 3639, 3640, 3641, 3642, 3643, 3644, 3645, 3646, 3647, 3648, 3649, 3650, 3651, 3652, 3653, 3654, 3655, 3656, 3657, 3658, 3659, 3660, 3661, 3662, 3663, 3664, 3665, 3666, 3667, 3668, 3669, 3670, 3671, 3672, 3673, 2596, 2597, 2598, 2599, 2600, 2601, 2602, 2603, 2604, 2605, 2606, 2607, 2608, 2609, 2610, 2611, 2612, 2613, 3778, 3779, 3780, 3781, 3782, 3783, 3784, 3785, 3786, 3787, 3788, 3789, 3790, 3791, 3792, 3793, 3794, 3795, 3796, 3797, 3798, 3799, 3800, 3801, 3802, 3803, 3804, 3805, 3806, 3807, 3808, 3809, 3810, 3811, 3812, 3813, 3814, 3815, 3816, 3817, 3818, 3819, 3217, 3218, 3219, 3220, 3221, 3222, 3223, 3224, 3225, 3226, 3227, 3228, 3229, 3230, 3231, 2181, 2182, 2183, 2184, 2185, 2186, 2187, 2188, 2189, 2190, 2191, 2192, 2193, 2194, 2195, 2196, 2197, 2198, 2199, 2200, 2201, 2202, 2203, 2204, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 2552, 2553, 2554, 2555, 2556, 2557, 2558, 2559, 2560, 2561, 2562, 2563, 2564, 2565, 2566, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 442, 443, 444, 445, 446, 447, 448, 449, 2097, 2098, 2099, 2100, 2101, 2102, 2103, 2104, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 3401, 3402, 3403, 3404, 3405, 3406, 3407, 3408, 3409, 4491, 4492, 4493, 4494, 4495, 4496, 4497, 4498, 4499, 4500, 4501, 4502, 4503, 4504, 4505, 4506, 4507, 4508, 4509, 4510, 4511, 4512, 4513, 4514, 4515, 4177, 4178, 4179, 4180, 4181, 4182, 4183, 4184, 2841, 2842, 2843, 2844, 2845, 2846, 2847, 2848, 2849, 2850, 2851, 2852, 4277, 4278, 4279, 4280, 4281, 4282, 4283, 4284, 4285, 4286, 4287, 4288, 4289, 4290, 4291, 4292, 4293, 4294, 4295, 4296, 4297, 4298, 4299, 4300, 4301, 4302, 4303, 4304, 4305, 4306, 4307, 4308, 4309, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325, 4326, 4327, 4328, 4329, 4330, 4331, 4332, 4333, 4334, 4335, 4336, 4337, 4338, 4339, 4340, 4341, 4342, 4343, 4344, 4345, 4346, 4347, 4348, 4349, 4350, 4351, 4352, 4353, 4354, 4355, 4356, 4357, 4358, 4359};
+			// nieuwe route
+			int[] route = new int[]{2957, 2958, 2959, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968, 2969, 2970, 2971, 2972, 2973, 2974, 1874, 1875, 1876, 1877, 1878, 1879, 1880, 1881, 1882, 1883, 1884, 1885, 1886, 1887, 1888, 1889, 1890, 1891, 1892, 1893, 1894, 1895, 1896, 1897, 1898, 1899, 1900, 1901, 1902, 1903, 1436, 1437, 1438, 1439, 2645, 2646, 2647, 2648, 2649, 2650, 2651, 2652, 2653, 2654, 2655, 2656, 2657, 2658, 2659, 2660, 2661, 2662, 2663, 2664, 2665, 2666, 2667, 2668, 2669, 2670, 2671, 2672, 2673, 2674, 2675, 2676, 2677, 2678, 4472, 4473, 4474, 4475, 4476, 4477, 4478, 4479, 4480, 4481, 4482, 4483, 4484, 4485, 4486, 4487, 4488, 4489, 3565, 3566, 3567, 3568, 3569, 3570, 3571, 3572, 3573, 3574, 3575, 3576, 3577, 3578, 3579, 3580, 3581, 3582, 3583, 3584, 3585, 3586, 3587, 3588, 3589, 3590, 3591, 3592, 3593, 3594, 3595, 3596, 3597, 3598, 3599, 3600, 3601, 3602, 3603, 3604, 3605, 3606, 3607, 3608, 3609, 3610, 3611, 3612, 3613, 3614, 3615, 3616, 3617, 3618, 3619, 3620, 3621, 3622, 3623, 3624, 3625, 3626, 3627, 3628, 3629, 3630, 3631, 3632, 3633, 3634, 3635, 3636, 3637, 3638, 3639, 3640, 3641, 3642, 3643, 3644, 3645, 3646, 3647, 3648, 3649, 3650, 3651, 3652, 3653, 3654, 3655, 3656, 3657, 3658, 3659, 3660, 3661, 3662, 3663, 3664, 3665, 3666, 3667, 3668, 3669, 3670, 3671, 3672, 2595, 2596, 2597, 2598, 2599, 2600, 2601, 2602, 2603, 2604, 2605, 2606, 2607, 2608, 2609, 2610, 2611, 2612, 3777, 3778, 3779, 3780, 3781, 3782, 3783, 3784, 3785, 3786, 3787, 3788, 3789, 3790, 3791, 3792, 3793, 3794, 3795, 3796, 3797, 3798, 3799, 3800, 3801, 3802, 3803, 3804, 3805, 3806, 3807, 3808, 3809, 3810, 3811, 3812, 3813, 3814, 3815, 3816, 3817, 3818, 3216, 3217, 3218, 3219, 3220, 3221, 3222, 3223, 3224, 3225, 3226, 3227, 3228, 3229, 3230, 2180, 2181, 2182, 2183, 2184, 2185, 2186, 2187, 2188, 2189, 2190, 2191, 2192, 2193, 2194, 2195, 2196, 2197, 2198, 2199, 2200, 2201, 2202, 2203, 552, 553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 2551, 2552, 2553, 2554, 2555, 2556, 2557, 2558, 2559, 2560, 2561, 2562, 2563, 2564, 2565, 1312, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 441, 442, 443, 444, 445, 446, 447, 448, 2096, 2097, 2098, 2099, 2100, 2101, 2102, 2103, 2104, 2105, 2106, 2107, 2108, 2109, 2110, 3400, 3401, 3402, 3403, 3404, 3405, 3406, 3407, 3408, 4490, 4491, 4492, 4493, 4494, 4495, 4496, 4497, 4498, 4499, 4500, 4501, 4502, 4503, 4504, 4505, 4506, 4507, 4508, 4509, 4510, 4511, 4512, 4513, 4514, 4176, 4177, 4178, 4179, 4180, 4181, 4182, 4183, 2840, 2841, 2842, 2843, 2844, 2845, 2846, 2847, 2848, 2849, 2850, 2851, 4276, 4277, 4278, 4279, 4280, 4281, 4282, 4283, 4284, 4285, 4286, 4287, 4288, 4289, 4290, 4291, 4292, 4293, 4294, 4295, 4296, 4297, 4298, 4299, 4300, 4301, 4302, 4303, 4304, 4305, 4306, 4307, 4308, 4309, 4310, 4311, 4312, 4313, 4314, 4315, 4316, 4317, 4318, 4319, 4320, 4321, 4322, 4323, 4324, 4325, 4326, 4327, 4328, 4329, 4330, 4331, 4332, 4333, 4334, 4335, 4336, 4337, 4338, 4339, 4340, 4341, 4342, 4343, 4344, 4345, 4346, 4347, 4348, 4349, 4350, 4351, 4352, 4353, 4354, 4355, 4356, 4357, 4358};
+
+			int[] experiments = new int[]{2};
 			for (int i: experiments) {
 				String prefix = Long.toString(System.currentTimeMillis());
 				ExperimentConfiguration expConfig = null;
@@ -388,7 +399,7 @@ public class TestExperimentRotterdam {
 				System.out.println(Arrays.deepToString(par));
 				
 				ArrayList<AssimilationMethod> assimilationMethods = new ArrayList<AssimilationMethod>();
-				assimilationMethods.add(AssimilationMethod.ENKF);
+				/*assimilationMethods.add(AssimilationMethod.ENKF);
 				assimilationMethods.add(AssimilationMethod.ENKF_SMW);
 				assimilationMethods.add(AssimilationMethod.DENKF);
 				assimilationMethods.add(AssimilationMethod.DENKF_SMW);
@@ -403,7 +414,7 @@ public class TestExperimentRotterdam {
 				assimilationMethods.add(AssimilationMethod.DENKF_GRID);
 				assimilationMethods.add(AssimilationMethod.DENKF_GRID_PARALLEL);
 				assimilationMethods.add(AssimilationMethod.DENKF_GRID_SMW);
-				assimilationMethods.add(AssimilationMethod.DENKF_GRID_SMW_PARALLEL);
+				assimilationMethods.add(AssimilationMethod.DENKF_GRID_SMW_PARALLEL);*/
 				//assimilationMethods.add(AssimilationMethod.NO_ASSIMILATION);
 
 				ArrayList<Integer> localizationWidths = new ArrayList<Integer>();
@@ -435,7 +446,8 @@ public class TestExperimentRotterdam {
 				errorList.add(new ErrorConfiguration(StateDefinition.K_CELL,0.000,1.00));
 				errorList.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.00,1.00));
 				errorList.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.00,1.00));
-				expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.NO_ASSIMILATION, 5, errorList, 2));
+				expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.NO_ASSIMILATION, 5, errorList, 1));
+				
 				
 			/*	errorList = new ArrayList<ErrorConfiguration>();
 				errorList.add(new ErrorConfiguration(StateDefinition.K_CELL,0.000,1.00));
@@ -453,9 +465,9 @@ public class TestExperimentRotterdam {
 				bounds[0] = new double[]{0.001,0.015};
 				bounds[1] = new double[]{0.01,0.25};
 				bounds[2] = new double[]{0.001,0.10};
-				bounds[3] = new double[]{1.000,1.05};
-				bounds[4] = new double[]{1.000,1.05};
-				bounds[5] = new double[]{1.000,1.05};
+				bounds[3] = new double[]{1.000,1.02};
+				bounds[4] = new double[]{1.000,1.02};
+				bounds[5] = new double[]{1.000,1.02};
 
 				int nrMC = 10;
 				double[][] par = new double[nrMC][6]; 
@@ -489,18 +501,17 @@ public class TestExperimentRotterdam {
 				System.out.println(Arrays.deepToString(par));
 				
 				ArrayList<AssimilationMethod> assimilationMethods = new ArrayList<AssimilationMethod>();
-				//assimilationMethods.add(AssimilationMethod.ENKF);
+				
 				//assimilationMethods.add(AssimilationMethod.ENKF_SMW);
-				//assimilationMethods.add(AssimilationMethod.DENKF);
+				
 				//assimilationMethods.add(AssimilationMethod.DENKF_SMW);
 
 				//assimilationMethods.add(AssimilationMethod.LENKF_MEASUREMENT);
-				assimilationMethods.add(AssimilationMethod.LENKF_GRID);
+				//assimilationMethods.add(AssimilationMethod.LENKF_GRID_PARALLEL);
 				
-				//assimilationMethods.add(AssimilationMethod.LENKF_GRID_SMW);
 				//assimilationMethods.add(AssimilationMethod.DENKF_MEASUREMENT);
-				//assimilationMethods.add(AssimilationMethod.DENKF_GRID);
-				//assimilationMethods.add(AssimilationMethod.DENKF_GRID_SMW);
+				//assimilationMethods.add(AssimilationMethod.DENKF_GRID_PARALLEL);
+				
 
 				ArrayList<Integer> localizationWidths = new ArrayList<Integer>();
 				
@@ -530,7 +541,117 @@ public class TestExperimentRotterdam {
 				errorList.add(new ErrorConfiguration(StateDefinition.K_CELL,0.000,1.00));
 				errorList.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.00,1.00));
 				errorList.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.00,1.00));
-				expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.ENKF, 5, errorList, 2));
+				expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.NO_ASSIMILATION, 5, errorList, 1));
+				return expConfig;
+	}
+	public static ExperimentConfiguration experiment3(ArrayList<String> networkConfigs) {
+		ArrayList<ArrayList<ErrorConfiguration>> errorConfigs = new ArrayList<ArrayList<ErrorConfiguration>>();
+
+	// first MC experiment: 
+				Random rt = new Random(65);
+				double[][] bounds = new double[6][2];
+				bounds[0] = new double[]{0.001,0.015};
+				bounds[1] = new double[]{0.01,0.25};
+				bounds[2] = new double[]{0.001,0.10};
+				bounds[3] = new double[]{1.000,1.02};
+				bounds[4] = new double[]{1.000,1.02};
+				bounds[5] = new double[]{1.000,1.02};
+				/*bounds[3] = new double[]{1.000,1.00};
+				bounds[4] = new double[]{1.000,1.00};
+				bounds[5] = new double[]{1.000,1.00};*/
+
+				int nrMC = 10;
+				double[][] par = new double[nrMC][6]; 
+				for (int i=0; i<nrMC;i++) {
+					int j = 0;
+					for (double[] b: bounds) {
+
+						//par[i][j] = Math.pow(b[1]/b[0],rt.nextDouble())*b[0];
+						par[i][j] = b[0] + rt.nextDouble()*(b[1]-b[0]);
+						j++;	
+
+
+
+					}
+				}
+				double[][] fixPar = new double[1][6];
+				fixPar[0] = par[1];
+
+				double[] errorsK = new double[]{0.001,0.003,0.01};
+				double[] errorsI = new double[]{0.01,0.03,0.1,0.3};
+				double[] errorsT = new double[]{0.01,0.015,0.2};
+				for (double[] p: par) {
+				//for (double[] p: fixPar) {
+					ArrayList<ErrorConfiguration> errorList1a = new ArrayList<ErrorConfiguration>();
+					errorList1a.add(new ErrorConfiguration(StateDefinition.K_CELL,p[0],p[3]));
+					errorList1a.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,p[1],p[4]));
+					errorList1a.add(new ErrorConfiguration(StateDefinition.TF_NODE,p[2],p[5]));
+					errorConfigs.add(errorList1a);
+				}
+
+				System.out.println(Arrays.deepToString(par));
+				
+				/*ArrayList<AssimilationMethod> assimilationMethods = new ArrayList<AssimilationMethod>();
+				
+				assimilationMethods.add(AssimilationMethod.ENKF_SMW);
+				
+				assimilationMethods.add(AssimilationMethod.DENKF_SMW);
+
+				assimilationMethods.add(AssimilationMethod.LENKF_MEASUREMENT);
+				assimilationMethods.add(AssimilationMethod.LENKF_GRID_PARALLEL);
+				
+				assimilationMethods.add(AssimilationMethod.DENKF_MEASUREMENT);
+				assimilationMethods.add(AssimilationMethod.DENKF_GRID_PARALLEL);
+				
+
+				ArrayList<Integer> localizationWidths = new ArrayList<Integer>();
+				
+				localizationWidths.add(20);
+				
+
+				ArrayList<Integer> ensembleSizes = new ArrayList<Integer>();
+				ensembleSizes.add(20);
+				
+				ArrayList<Integer> inflowTFFactors = new ArrayList<Integer>();
+
+				inflowTFFactors.add(3);*/
+				//int[] ensemblesizes = new int[]{10,20,30,40,50};
+				int[] ensemblesizes = new int[]{20};
+				boolean forecastsNeeded = false;
+				ArrayList<EnKFRunConfiguration> runConfigurations = new ArrayList<EnKFRunConfiguration>();
+				for (int e: ensemblesizes) {
+						
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.ENKF_SMW, 20, errorConfigs.get(1), e,60));
+					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.ENKF_SMW, 20, errorConfigs.get(0), e,60));
+
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_SMW, 20, errorConfigs.get(1), e,60));
+					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_SMW, 20, errorConfigs.get(3), e,60));
+
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_MEASUREMENT, 20, errorConfigs.get(4), e,60));
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_GRID_PARALLEL, 20, errorConfigs.get(4), e,60));
+					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.LENKF_GRID_SMW, 20, errorConfigs.get(1), e,60));
+
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_MEASUREMENT, 20, errorConfigs.get(4), e,60));
+					runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_GRID_PARALLEL, 20, errorConfigs.get(4), e,60));
+					//runConfigurations.add(new EnKFRunConfiguration(AssimilationMethod.DENKF_GRID_SMW, 20, errorConfigs.get(3), e,60));
+
+				}
+				extendedOutput = true;
+				//ExperimentConfiguration expConfig = new ExperimentConfiguration(errorConfigs,assimilationMethods,networkConfigs,localizationWidths, inflowTFFactors, ensembleSizes, forecastsNeeded, extendedOutput);
+				ExperimentConfiguration expConfig = new ExperimentConfiguration(runConfigurations,networkConfigs,  forecastsNeeded, extendedOutput);
+
+
+
+
+
+
+
+
+				ArrayList<ErrorConfiguration> errorList = new ArrayList<ErrorConfiguration>();
+				errorList.add(new ErrorConfiguration(StateDefinition.K_CELL,0.000,1.00));
+				errorList.add(new ErrorConfiguration(StateDefinition.INFLOW_NODE,0.00,1.00));
+				errorList.add(new ErrorConfiguration(StateDefinition.TF_NODE,0.00,1.00));
+				expConfig.addRunConfiguration(new EnKFRunConfiguration(AssimilationMethod.NO_ASSIMILATION, 5, errorList, 1));
 				return expConfig;
 	}
 	public static void exportToMatlab(ExperimentConfiguration expConfig, double[][] inflow3, double[][] turnfractionExp2, String prefix, long[][][] computationTimes) {

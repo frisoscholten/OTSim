@@ -260,7 +260,7 @@ public class TestEnKF {
 		int nrSteps = obs1.getRowDimension();
 		int nrModelSteps = obsTest[0].getRowDimension();
 		int nrModelStepsPerAssStep = (nrModelSteps-1)/(nrSteps-1);
-		boolean openGUI =false;
+		boolean openGUI =true;
 		Scheduler scheduler;
 		if (openGUI) {
 			if (run == 0) {
@@ -348,6 +348,7 @@ public class TestEnKF {
 			//double time = 0;
 			long t0 = System.nanoTime();
 			for (int j = 1; j<=(nrModelStepsPerAssStep);j++) {
+				//macromodel.getCells().get(exportRoute.get(271))
 				scheduler.stepUpTo((i-1)*60.0+j*test.macromodel.dt);
 				int t = (i-1)*nrModelStepsPerAssStep + j-1;
 				//System.out.println("t"+t);
@@ -839,6 +840,8 @@ public class TestEnKF {
 		double[] stdArray = new double[nrObservations];
 		double initErrorSpeedObs = 2.25;
 		double initErrorFlowObs= 0.0016;
+		//double initErrorSpeedObs = Double.MAX_VALUE;
+		//double initErrorFlowObs= Double.MAX_VALUE;
 		//Arrays.fill(stdArray, 0, nrSpeedObservations, Math.sqrt(initErrorSpeedObs)); //2.5
 		//Arrays.fill(stdArray, nrSpeedObservations, nrObservations, Math.sqrt(initErrorFlowObs)); //0.06
 		Arrays.fill(stdArray, 0, nrSpeedObservations, Math.sqrt(initErrorSpeedObs)); //2.5
@@ -852,8 +855,18 @@ public class TestEnKF {
 		R.setMatrix(0,nrSpeedObservations-1,0,nrSpeedObservations-1,Matrix.identity(nrSpeedObservations, nrSpeedObservations).times(initErrorSpeedObs));
 		R.setMatrix(nrSpeedObservations,nrObservations-1,nrSpeedObservations,nrObservations-1,Matrix.identity(nrFlowObservations, nrFlowObservations).times(initErrorFlowObs));
 		Matrix Rinv = new Matrix(nrObservations, nrObservations);
-		Rinv.setMatrix(0,nrSpeedObservations-1,0,nrSpeedObservations-1,Matrix.identity(nrSpeedObservations, nrSpeedObservations).times(1/initErrorSpeedObs));
-		Rinv.setMatrix(nrSpeedObservations,nrObservations-1,nrSpeedObservations,nrObservations-1,Matrix.identity(nrFlowObservations, nrFlowObservations).times(1/initErrorFlowObs));
+		if (initErrorSpeedObs == Double.MAX_VALUE) {
+			Rinv.setMatrix(0,nrSpeedObservations-1,0,nrSpeedObservations-1,Matrix.identity(nrSpeedObservations, nrSpeedObservations).times(0));
+		} else {
+			Rinv.setMatrix(0,nrSpeedObservations-1,0,nrSpeedObservations-1,Matrix.identity(nrSpeedObservations, nrSpeedObservations).times(1/initErrorSpeedObs));
+		}
+		if (initErrorFlowObs == Double.MAX_VALUE) {
+			Rinv.setMatrix(nrSpeedObservations,nrObservations-1,nrSpeedObservations,nrObservations-1,Matrix.identity(nrFlowObservations, nrFlowObservations).times(0));
+		} else {
+			Rinv.setMatrix(nrSpeedObservations,nrObservations-1,nrSpeedObservations,nrObservations-1,Matrix.identity(nrFlowObservations, nrFlowObservations).times(1/initErrorFlowObs));
+		}
+
+		
 
 		Matrix obsNoised;
 		r.setSeed(r2.nextInt());
@@ -1178,6 +1191,7 @@ public class TestEnKF {
 			 // Z = (HA.transpose()).times(M.times(Y));
 			 Z = (HA.transpose()).times(M);
 			 diff = (A.times(Z)).times(1.0/(N-1));
+			
 
 			 Xa = X.plus(diff);
 
@@ -1475,7 +1489,7 @@ public class TestEnKF {
 			    }
 		
 			diff = MultiThreadedUpdate.computeTotal(stateIndices, HX, D, R, HA, X, A, AssimilationMethod.LENKF_GRID_PARALLEL);
-		
+			 //System.out.println(diff.norm1());
 			Xa = X.plus(diff);
 
 			break;
@@ -2133,6 +2147,22 @@ public class TestEnKF {
 		 Matrix gemV = new Matrix(speeds,speeds.length);
 
 		 Matrix[] output = AssimilationConfiguration.getOutput(macromodel, StateDefinition.K_CELL, StateDefinition.V_CELL, StateDefinition.TRAFFICREGIME_CELL); 
+		/*Matrix diffXXa =  X.minus(Xa);
+		System.out.println(diffXXa.norm1() + " & " + diffXXa.norm2() + " & " + diffXXa.normF() + " & " + diffXXa.normInf());
+		double[] error = new double[(gemXa.transpose()).getArray()[0].length];
+		double[] after = config.saveStateToArray(macromodel);
+		double totalError = 0;
+		for (int i = 0; i<error.length; i++) {
+			error[i] = (gemXa.transpose()).getArray()[0][i] - after[i];
+			totalError+= Math.abs(error[i]);
+		}
+		System.out.println(totalError);
+		
+		 if (diffXXa.normF() > 0.0000001 || totalError > 0.0000001){
+			System.out.println("high error");
+		}
+		Matrix Xr = gemX.getMatrix(exportRoute, 0,0);
+		Matrix Xar = gemXa.getMatrix(exportRoute, 0,0);*/
 		 /*double[] inflowAfter2 = AssimilationConfiguration.getOutput(macromodel, StateDefinition.INFLOW_NODE)[0].transpose().getArray()[0];
 		System.out.println("After2: "+Arrays.toString(inflowAfter2));
 		  */	return new Matrix[]{X,gemV,Xa,P,M,Z,observations, D, HX,gemH,gemX,gemXa,varH,varX,varXa,stdH,stdX,stdXa,output[2],new Matrix(1,1),new Matrix(1,1)};
@@ -2919,7 +2949,15 @@ public class TestEnKF {
 				//out.println("TruthV("+(i+1)+",:)="+Arrays.toString(m1[1].getArray()[i])+";");
 				//out.println("TruthTR("+(i+1)+",:)="+Arrays.toString(m1[2].getArray()[i])+";");
 			}
+			for (int i = 0; i< m1[1].getRowDimension();i++) {
 
+				out.println("TruthV("+(i+1)+",:)="+Arrays.toString(m1[1].getMatrix(i, i,route).getArray()[0])+";");
+				//out.println("TruthIn("+(i+1)+",:)="+Arrays.toString(m1[1].getArray()[i])+";");
+				//out.println("TruthTF("+(i+1)+",:)="+Arrays.toString(m1[2].getArray()[i])+";");
+
+				//out.println("TruthV("+(i+1)+",:)="+Arrays.toString(m1[1].getArray()[i])+";");
+				//out.println("TruthTR("+(i+1)+",:)="+Arrays.toString(m1[2].getArray()[i])+";");
+			}
 			/*Matrix Xa = new Matrix((results.length-1), nrCells,0);
 			Matrix V = new Matrix((results.length-1), nrCells,0);
 			Matrix Tr = new Matrix((results.length-1), nrCells,0);

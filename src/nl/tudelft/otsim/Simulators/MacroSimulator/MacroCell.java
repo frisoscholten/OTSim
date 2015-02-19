@@ -196,10 +196,11 @@ public class MacroCell {
     }
     public void init() {
     	lanes = (int) (width/3.5);
-    	kCri = kCriPerLane*lanes;
-    	kJam = kJamPerLane*lanes;
+    	//kCri = kCriPerLane*lanes;
+    	//kJam = kJamPerLane*lanes;
     	vCri = vCriBeforeInit;
-    	qCap = fd.calcQCap(this);
+    	recalculateFDparameters();
+    	//qCap = fd.calcQCap(this);
     	KCell = 0;
     	QCell = calcQ(KCell);
     	VCell = calcV(KCell);
@@ -210,6 +211,11 @@ public class MacroCell {
     	indexNodeIn = nodeIn.cellsOut.indexOf(this);
     	indexNodeOut = nodeOut.cellsIn.indexOf(this);
     	
+    }
+    public void recalculateFDparameters() {
+    	kCri = kCriPerLane*lanes;
+    	kJam = kJamPerLane*lanes;
+    	qCap = fd.calcQCap(this);
     }
     
     public void setWidth(double w) {

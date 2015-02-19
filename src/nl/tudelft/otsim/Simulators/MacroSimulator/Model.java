@@ -4,8 +4,10 @@ package nl.tudelft.otsim.Simulators.MacroSimulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import nl.tudelft.otsim.Simulators.SimulatedModel;
+import nl.tudelft.otsim.Simulators.MacroSimulator.ExternalEvents.ExternalEvent;
 import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.Node;
 import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.NodeBoundaryIn;
 import nl.tudelft.otsim.Simulators.MacroSimulator.Nodes.NodeDetector;
@@ -50,6 +52,7 @@ public class Model implements SimulatedModel {
 	private ArrayList<NodeInterior> junctionNodes = new ArrayList<NodeInterior>();
 	private ArrayList<Link> links;
 	protected double[] state;
+	private List<ExternalEvent> externalEvents;
 
 	public void init() {
 		// Set attributes
@@ -71,6 +74,9 @@ public class Model implements SimulatedModel {
 		for (NodeBoundaryIn n: inflowNodes) {
 			n.initTSF();
 		}
+		for (ExternalEvent ext: externalEvents) {
+			ext.init(this);
+		}
 
 
 	}
@@ -84,6 +90,13 @@ public class Model implements SimulatedModel {
 			throw new Error("hallo");
 		}
 		for (int nn = 0; (nn < n) && (t < period); nn++) {
+			for (ExternalEvent ext: externalEvents) {
+				if (t>=ext.getBeginTime() && !ext.eventStarted()) 
+					ext.startEvent();
+				
+				if (t>=ext.getEndTime()&& !ext.eventEnded())
+					ext.endEvent();
+			}
 			//System.out.println("test");
 			//java.util.ArrayList<MacroCell> tmp2 = new java.util.ArrayList<MacroCell>(cells);
 			//System.out.println("size Arraylist: " + Integer.toString(tmp2.size()));
@@ -459,6 +472,9 @@ public class Model implements SimulatedModel {
 	}
 	public void setDetectors(ArrayList<NodeDetector> detectors) {
 		this.detectors = detectors;
+	}
+	public void setExternalEvents(List<ExternalEvent> externalEvents) {
+		this.externalEvents = externalEvents;
 	}
 	public ArrayList<NodeDetector> getDetectors() {
 		return this.detectors;

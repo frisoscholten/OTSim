@@ -3,6 +3,7 @@ package nl.tudelft.otsim.Simulators.MacroSimulator.Nodes;
 import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,9 @@ public class NodeDetector extends Node {
 		closestCell.updateVariables();
 		return new double[]{closestCell.QCell,closestCell.VCell};
 	}
+	public String getInstantMeasurements_r() {
+		return Arrays.toString(getInstantMeasurements());
+	}
 	
 	public static double calcArithmeticMean(ArrayList<Double> values) {
 		double res = 0;
@@ -95,11 +99,13 @@ public class NodeDetector extends Node {
 	
 	
 	public void draw(GraphicsPanel graphicsPanel) {
+		//final int nonSelectedNodeDiameter = (int) (130.2 *  graphicsPanel.getZoom());
 		final int nonSelectedNodeDiameter = (int) (50.2 *  graphicsPanel.getZoom());
     	Point2D.Double point = location.getPoint();            
         final Color color = Color.BLUE;
         graphicsPanel.setColor(color);
         graphicsPanel.setStroke(1f);
+        //graphicsPanel.setStroke(50f);
         graphicsPanel.drawCircle(point, color, nonSelectedNodeDiameter);
         graphicsPanel.setStroke(3f);
    	
@@ -140,6 +146,9 @@ public class NodeDetector extends Node {
 	public double getDistanceToCell() {
 		return distanceToCell;
 	}
+	public double getDistanceToCell_r() {
+		return distanceToCell;
+	}
 	/**
 	 * @param distanceToCell the distanceToCell to set
 	 */
@@ -150,6 +159,9 @@ public class NodeDetector extends Node {
 	 * @return the distanceFromNode
 	 */
 	public double getDistanceFromNode() {
+		return distanceFromNode;
+	}
+	public double getDistanceFromNode_r() {
 		return distanceFromNode;
 	}
 	/**
@@ -164,6 +176,9 @@ public class NodeDetector extends Node {
 	public int getFromNode() {
 		return fromNode;
 	}
+	public int getFromNode_r() {
+		return fromNode;
+	}
 	/**
 	 * @param fromNode the fromNode to set
 	 */
@@ -174,6 +189,9 @@ public class NodeDetector extends Node {
 	 * @return the toNode
 	 */
 	public int getToNode() {
+		return toNode;
+	}
+	public int getToNode_r() {
 		return toNode;
 	}
 	/**
